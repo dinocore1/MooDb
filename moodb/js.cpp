@@ -39,11 +39,9 @@ JSBool js_log(JSContext *cx, uintN argc, jsval *vp) {
 	if (!JS_ConvertArguments(cx, argc, JS_ARGV(cx, vp), "S", &msg))
 		return JS_FALSE;
 
-	char* cmsg = JS_EncodeString(cx, msg);
+	JSAutoByteString msgstr(cx, msg);
 
-	printf("JS: %s", cmsg);
-
-	JS_free(cx, cmsg);
+	printf("JS: %s", msgstr.ptr());
 
 	JS_SET_RVAL(cx, vp, JSVAL_VOID);
 	return JS_TRUE;
@@ -214,16 +212,20 @@ int ensureObjHasFunctionProperty(moodb *pDB, jsval obj, const char *functionName
 	return MOODB_OK;
 }
 
+
+#ifdef DEBUG
+
 void printJSObject(JSContext *cx, jsval val) {
 	jsval rval;
 	if(!JS_CallFunctionName(cx, JSVAL_TO_OBJECT(val), "toSource", 0, 0, &rval)){
 		printf("convert to source");
 		return;
 	}
-	char* data = JS_EncodeString(cx, JSVAL_TO_STRING(rval));
-	printf("\njsval: %s\n", data);
-	JS_free(cx, data);
+	JSAutoByteString data(cx, JSVAL_TO_STRING(rval));
+	printf("\njsval: %s\n", data.ptr());
 }
+
+#endif
 
 void createJSIterator(moodb *pDb, jsval *prval, const char *sqlCmd, ...) {
 

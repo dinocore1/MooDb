@@ -52,6 +52,7 @@ public:
 	int execute_query(SqliteCursor *cursor, const char *sql, ...);
 	int execure_query_va(SqliteCursor *cursor, const char *sql, va_list args);
 	int execute_update(const char *sql, ...);
+	int execute_sql(const char *sql);
 
 	void beginTransaction(SqliteTransactionScope *tr);
 

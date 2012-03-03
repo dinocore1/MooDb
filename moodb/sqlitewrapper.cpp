@@ -187,6 +187,10 @@ int SqliteWrapper::execute_update(const char *sql, ...) {
 	return rc;
 }
 
+int SqliteWrapper::execute_sql(const char *sql) {
+	return sqlite3_exec(pDB, sql, NULL, NULL, NULL);
+}
+
 sqlite3_int64 SqliteWrapper::getLastInsertRow() {
 	return sqlite3_last_insert_rowid(pDB);
 }

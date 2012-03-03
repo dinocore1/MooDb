@@ -14,8 +14,8 @@ AC_PROG_CXX #check for C++ compiler
 AC_ARG_ENABLE([debug],
   AS_HELP_STRING([--enable-debug], [compile with -g -O0]),
   [echo "compiling with -g -O0"
-  CFLAGS="-DDEBUG -g -O0"
-  CXXFLAGS="-DDEBUG -g -O0"
+  CFLAGS="-g -O0"
+  CXXFLAGS="-g -O0"
   ]
 )
 

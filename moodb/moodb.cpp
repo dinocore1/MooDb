@@ -106,9 +106,9 @@ int moodb_open(const char *filename, moodb **ppDb) {
 		return MOODB_ERROR;
 	}
 
-	if(db->db.execute_update("CREATE TABLE IF NOT EXISTS objects ( _id INTEGER PRIMARY KEY, key TEXT, data TEXT, UNIQUE(key) );"
+	if(db->db.execute_sql("CREATE TABLE IF NOT EXISTS objects ( _id INTEGER PRIMARY KEY, key TEXT, data TEXT, UNIQUE(key) );"
 						"CREATE TABLE IF NOT EXISTS views ( name TEXT PRIMARY KEY, viewSpec TEXT, dirty INTEGER);")
-						!= SQLITE_DONE){
+						!= SQLITE_OK){
 		return MOODB_ERROR;
 	}
 
