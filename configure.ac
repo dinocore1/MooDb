@@ -5,7 +5,6 @@ AC_CANONICAL_SYSTEM # create a cross platform build system
 AM_INIT_AUTOMAKE # init automake
 
 AC_CONFIG_MACRO_DIR([m4])
-m4_include([m4/lf_txtc.m4])
 
 LT_INIT
 
