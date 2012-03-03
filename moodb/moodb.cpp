@@ -107,8 +107,8 @@ int moodb_open(const char *filename, moodb **ppDb) {
 	}
 
 	if(db->db.execute_sql("CREATE TABLE IF NOT EXISTS objects ( _id INTEGER PRIMARY KEY, key TEXT, data TEXT, UNIQUE(key) );"
-						"CREATE TABLE IF NOT EXISTS views ( name TEXT PRIMARY KEY, viewSpec TEXT, dirty INTEGER);")
-						!= SQLITE_OK){
+			"CREATE TABLE IF NOT EXISTS views ( name TEXT PRIMARY KEY, viewSpec TEXT, dirty INTEGER);")
+			!= SQLITE_OK){
 		return MOODB_ERROR;
 	}
 
@@ -189,6 +189,25 @@ int moodb_putobject(moodb *pDB, const char *id, const char* jsonData, char** ppI
 	if(ppId != NULL){
 		*ppId = (char*)moodb_malloc(sizeof(char) * strlen(id));
 		strcpy(*ppId, id);
+	}
+
+	return MOODB_OK;
+}
+
+int moodb_getobject(moodb *pDB, const char *id, char** pJsonData) {
+	int retval;
+	SqliteCursor cursor;
+	retval = pDB->db.execute_query(&cursor, "SELECT data FROM objects WHERE key = @s", id);
+	if(retval != SQLITE_OK) {
+		return MOODB_ERROR;
+	}
+
+	if(pJsonData != NULL){
+		if(cursor.step() == SQLITE_ROW) {
+			const char *cdata = cursor.getText(0);
+			*pJsonData = (char*)moodb_malloc(sizeof(char) * (strlen(cdata) + 1));
+			strcpy(*pJsonData, cdata);
+		}
 	}
 
 	return MOODB_OK;
