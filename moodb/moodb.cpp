@@ -66,7 +66,9 @@ int reduce(moodb *pDb, const char *viewname) {
 		}
 	}
 
-	sprintf(pDb->currentQuery.emitTable, "r_%s", viewname);
+	pDb->currentQuery.emitTable.clear();
+	pDb->currentQuery.emitTable += "r_";
+	pDb->currentQuery.emitTable += viewname;
 	pDb->currentQuery.objectId = -1;
 
 	while(cursor.step() == SQLITE_ROW){
@@ -97,8 +99,7 @@ int reduce(moodb *pDb, const char *viewname) {
 int moodb_open(const char *filename, moodb **ppDb) {
 	LOG("opening database: %s", filename);
 
-	moodb *db = (moodb*)malloc(sizeof(moodb));
-	memset(db, 0, sizeof(moodb));
+	moodb *db = new moodb;
 
 	//init SQL
 
@@ -131,6 +132,8 @@ void moodb_close(moodb *pDb) {
 	if(numOpenConnections <=0){
 		shutdownJS();
 	}
+
+	delete pDb;
 }
 
 int moodb_putobject(moodb *pDB, const char *id, const char* jsonData, char** ppId) {
@@ -163,7 +166,9 @@ int moodb_putobject(moodb *pDB, const char *id, const char* jsonData, char** ppI
 	if(retval == SQLITE_OK){
 		while(cursor.step() == SQLITE_ROW){
 			const char *cname = cursor.getText(0);
-			sprintf(pDB->currentQuery.emitTable, "m_%s", cname);
+			pDB->currentQuery.emitTable.clear();
+			pDB->currentQuery.emitTable += "m_";
+			pDB->currentQuery.emitTable += cname;
 
 			const char *cviewspec = cursor.getText(1);
 
@@ -193,6 +198,7 @@ int moodb_putobject(moodb *pDB, const char *id, const char* jsonData, char** ppI
 
 	return MOODB_OK;
 }
+
 
 int moodb_getobject(moodb *pDB, const char *id, char** pJsonData) {
 	int retval;
@@ -317,7 +323,9 @@ int moodb_putview(moodb *pDB, const char *viewspec) {
 
 	{
 		//perform map function on existing objects
-		sprintf(pDB->currentQuery.emitTable, "m_%s", cname);
+		pDB->currentQuery.emitTable.clear();
+		pDB->currentQuery.emitTable += "m_";
+		pDB->currentQuery.emitTable += cname;
 
 		SqliteCursor cursor;
 		if(pDB->db.execute_query(&cursor, "SELECT _id, data FROM objects") != SQLITE_OK){
@@ -402,7 +410,7 @@ int moodb_query(moodb *pDB, moocursor **ppCursor, const char* query){
 			return MOODB_ERROR;
 		}
 
-		char sqlCmd[256];
+		string sqlCmd;
 		{
 			JSAutoByteString viewname(pDB->cx, JSVAL_TO_STRING(viewVal));
 			char *cviewname = viewname.ptr();
@@ -411,17 +419,19 @@ int moodb_query(moodb *pDB, moocursor **ppCursor, const char* query){
 				retval = reduce(pDB, &cviewname[2]);
 				if(retval != MOODB_OK){return MOODB_ERROR;}
 			}
-			sprintf(sqlCmd, "SELECT key, value FROM %s", cviewname);
+			sqlCmd += "SELECT key, value FROM ";
+			sqlCmd += cviewname;
 		}
 
 		if(whereClause.ptr()){
-			sprintf(sqlCmd, "%s WHERE %s;", sqlCmd, whereClause.ptr());
+			sqlCmd += " WHERE ";
+			sqlCmd += whereClause.ptr();
 		}
 
 		moocursor* cursor = new moocursor;
 		cursor->pDB = pDB;
 
-		retval = pDB->db.execute_query(&cursor->cursor, sqlCmd);
+		retval = pDB->db.execute_query(&cursor->cursor, sqlCmd.c_str());
 		if(retval == SQLITE_OK){
 			*ppCursor = cursor;
 		}

@@ -13,12 +13,37 @@ extern "C" {
 typedef struct moodb moodb;
 typedef struct moocursor moocursor;
 
+/**
+ * Open a new database connection. If the filename does not already exist, a new database
+ * will be created.
+ *
+ * @param [in] filename the filepath to the database
+ * @param [out] ppDb return pointer to the database connection object
+ */
 int moodb_open(const char *filename, moodb **ppDb);
 void moodb_close(moodb *pDb);
 
-int moodb_putobject(moodb *pDB, const char *id, const char* jsonData, char** ppId);
-int moodb_getobject(moodb *pDB, const char *id, char** pJsonData);
-int moodb_deleteobject(moodb *pDB, const char *id);
+/**
+ * Insert or update a data document.
+ *
+ * @param [in] pDB
+ * @param [in] key The key. If this value is NULL, a UUID will automatically be generated for the new document. If
+ * @sa pkey is not NULL, it will contain the key of the newly inserted document.
+ * @param [in] data the data to insert. Should be encoded in JSON format.
+ * @param [out] pkey if not NULL, this will hold the key of the newly inserted document.
+ */
+int moodb_putobject(moodb *pDB, const char *key, const char* data, char** pkey);
+
+/**
+ * fetches a data document based on its key.
+ *
+ * @param [in] pDB
+ * @param [in] key the key to look up
+ * @parma [out] pdata pointer to the returned data. When done, this must be freed using moodb_free()
+ * @see moodb_free()
+ */
+int moodb_getobject(moodb *pDB, const char *key, char** pdata);
+int moodb_deleteobject(moodb *pDB, const char *key);
 
 int moodb_putview(moodb *pDB, const char *viewspec);
 

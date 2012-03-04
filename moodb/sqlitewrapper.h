@@ -45,6 +45,7 @@ private:
 class SqliteWrapper {
 
 public:
+	SqliteWrapper();
 	~SqliteWrapper();
 
 	int open(const char *filename);

@@ -14,7 +14,8 @@ libmoodb_la_SOURCES = \
 	utils.h utils.cpp
 
 .jison.js:
-	$(JISON) $<	
+	$(JISON) $< -o $@ -m js
+	echo "$*;" >> $@
 	
 .js.o:
 	$(OBJCOPY) --input binary --output elf32-i386 --binary-architecture i386 $< $@

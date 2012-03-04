@@ -63,10 +63,12 @@ JSBool js_emit(JSContext *cx, uintN argc, jsval *vp) {
 
 	moodb* pDb = (moodb*)JS_GetContextPrivate(cx);
 
-	char sqlcmd[256];
-	sprintf(sqlcmd, "INSERT INTO %s (objid, key, value) VALUES (@l, @s, @s);", pDb->currentQuery.emitTable);
-	if(pDb->db.execute_update(sqlcmd, pDb->currentQuery.objectId, keystr.ptr(), valuestr.ptr()) != SQLITE_DONE){
-		setErrorMsg(pDb, "Error inserting into %s", pDb->currentQuery.emitTable);
+	std::string sqlcmd;
+	sqlcmd += "INSERT INTO ";
+	sqlcmd += pDb->currentQuery.emitTable;
+	sqlcmd += " (objid, key, value) VALUES (@l, @s, @s);";
+	if(pDb->db.execute_update(sqlcmd.c_str(), pDb->currentQuery.objectId, keystr.ptr(), valuestr.ptr()) != SQLITE_DONE){
+		setErrorMsg(pDb, "Error inserting into %s", pDb->currentQuery.emitTable.c_str());
 		return JS_FALSE;
 	}
 

@@ -71,6 +71,16 @@ void SqliteTransactionScope::setSuccesfull() {
 	mIsSuccess = true;
 }
 
+SqliteWrapper::SqliteWrapper() {
+	pDB = NULL;
+}
+
+SqliteWrapper::~SqliteWrapper() {
+	if(pDB != NULL){
+		sqlite3_close(pDB);
+	}
+}
+
 int SqliteWrapper::open(const char *filename){
 	return sqlite3_open(filename, &pDB);
 }

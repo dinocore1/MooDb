@@ -3,8 +3,8 @@
 #define COMMON_H_
 
 
-//std c
 #include <string.h>
+#include <string>
 
 
 #include <jsapi.h>
@@ -18,7 +18,7 @@
 #define MAX_ERRORMSG 1024
 
 typedef struct queryobject_t {
-	char emitTable[256];
+	std::string emitTable;
 	long objectId;
 } queryobject_t;
 

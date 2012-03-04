@@ -24,7 +24,7 @@ PKG_CHECK_MODULES( SQLITE, sqlite3)
 PKG_CHECK_MODULES( UUID, uuid)
 
 AC_CHECK_TOOL([OBJCOPY], [objcopy], [])
-AC_PATH_PROG( JISON, jison)  #check for jison (http://zaach.github.com/jison)
+AC_PATH_PROG( JISON, cli-wrapper.js)  #check for jison (http://zaach.github.com/jison)
 JISON="node $JISON"
 
 AC_CONFIG_HEADERS([config.h]) #setup config header

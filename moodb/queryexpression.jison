@@ -12,6 +12,7 @@
 [a-z|A-Z|0-9_]+       return 'ID'
 <<EOF>>               return 'EOF'
 
+
 /lex
 
 /* operator associations and precedence */

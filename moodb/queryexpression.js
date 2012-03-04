@@ -1,5 +1,5 @@
 /* Jison generated parser */
-(function(){
+var queryexpression = (function(){
 var parser = {trace: function trace() { },
 yy: {},
 symbols_: {"error":2,"expressions":3,"e":4,"EOF":5,"id":6,"ID":7,"STRING":8,"OP":9,"ep":10,"(":11,")":12,"AND":13,"OR":14,"$accept":0,"$end":1},
@@ -368,4 +368,4 @@ lexer.conditions = {"INITIAL":{"rules":[0,1,2,3,4,5,6],"inclusive":true}};
 return lexer;})()
 parser.lexer = lexer;
 return parser;
-})();
+})();queryexpression;
