@@ -11,8 +11,7 @@
 JSRuntime *runtime = NULL;
 JSObject *queryParser = NULL;
 
-extern char _binary_queryexpression_js_start;
-extern char _binary_queryexpression_js_end;
+extern const unsigned char queryexpression[];
 
 
 /* The class of the global object. */
@@ -167,9 +166,9 @@ int initJS(moodb *pDb) {
 
 
 	if(queryParser == NULL){
-		//queryParser = JS_CompileFile(cx, NULL, "queryexpression.js");
-		size_t length =  &_binary_queryexpression_js_end - &_binary_queryexpression_js_start;
-		queryParser = JS_CompileScript(cx, NULL, &_binary_queryexpression_js_start, length, __FUNCTION__, __LINE__);
+		const char* querystr = reinterpret_cast<const char*>(queryexpression);
+		size_t length = strlen(querystr);
+		queryParser = JS_CompileScript(cx, NULL, querystr, length, __FUNCTION__, __LINE__);
 		if(queryParser == NULL){
 			setErrorMsg(pDb, "error compiling queryexpression");
 			return MOODB_ERROR;
