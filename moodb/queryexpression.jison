@@ -7,7 +7,7 @@
 \s+                   /* skip whitespace */
 "OR"                  return 'OR'
 "AND"                 return 'AND'
-(([<>]"="?)|"=")      return 'OP'
+(("<>"|[<>]"="?)|"=")      return 'OP'
 \"(\\.|[^\\"])*\"     return 'STRING'
 [a-z|A-Z|0-9_]+       return 'ID'
 <<EOF>>               return 'EOF'

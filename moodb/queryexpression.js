@@ -363,7 +363,7 @@ case 6:return 5
 break;
 }
 };
-lexer.rules = [/^\s+/,/^OR\b/,/^AND\b/,/^(([<>]=?)|=)/,/^"(\\.|[^\\"])*"/,/^[a-z|A-Z|0-9_]+/,/^$/];
+lexer.rules = [/^\s+/,/^OR\b/,/^AND\b/,/^((<>|[<>]=?)|=)/,/^"(\\.|[^\\"])*"/,/^[a-z|A-Z|0-9_]+/,/^$/];
 lexer.conditions = {"INITIAL":{"rules":[0,1,2,3,4,5,6],"inclusive":true}};
 return lexer;})()
 parser.lexer = lexer;

@@ -419,7 +419,7 @@ int moodb_query(moodb *pDB, moocursor **ppCursor, const char* query){
 				retval = reduce(pDB, &cviewname[2]);
 				if(retval != MOODB_OK){return MOODB_ERROR;}
 			}
-			sqlCmd += "SELECT key, value FROM ";
+			sqlCmd += "SELECT key, data FROM objects WHERE _id IN (SELECT DISTINCT(objid) FROM ";
 			sqlCmd += cviewname;
 		}
 
@@ -427,6 +427,9 @@ int moodb_query(moodb *pDB, moocursor **ppCursor, const char* query){
 			sqlCmd += " WHERE ";
 			sqlCmd += whereClause.ptr();
 		}
+
+		sqlCmd += ")";
+		LOG("SQL query: %s", sqlCmd.c_str());
 
 		moocursor* cursor = new moocursor;
 		cursor->pDB = pDB;

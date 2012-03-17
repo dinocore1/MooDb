@@ -29,7 +29,9 @@ int main(int argv, const char* argc) {
 			"if(obj.age){ emit(\"age\", obj.age);} } })");
 
 	moocursor *cursor;
-	moodb_query(db, &cursor, "({view: \"m_people\", output: \"doc\", filter: \"age < 26\" })");
+	moodb_query(db, &cursor, "({view: \"m_people\", filter: \"age <> 25\" })");
+
+	printf("\n\nQuery:\n");
 
 	char *key, *value;
 	while(moodbcursor_next(cursor, &key, &value) == MOODB_OK){
