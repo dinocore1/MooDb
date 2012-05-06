@@ -1,0 +1,44 @@
+include utils.mk
+
+ANDROID_SDK := ${ANDROID_SDK}
+
+NDK_VERSION := android-ndk-r8
+
+ifeq ($(shell uname),Darwin)
+ANDROID_NDK_ZIP := $(NDK_VERSION)-darwin-x86.tar.bz2
+else
+ANDROID_NDK_ZIP := $(NDK_VERSION)-linux-x86.tar.bz2
+endif
+
+ANDROID_NDK_ZIPFILE := venders/$(ANDROID_NDK_ZIP)
+
+
+ANDROID_X86SYSROOT := venders/androidtoolchain-x86
+ANDROID_ARMSYSROOT := venders/androidtoolchain-arm
+ANDROID_CXX_X86 := $(ANDROID_X86SYSROOT)/bin/i686-android-linux-g++
+ANDROID_CXX_ARM := $(ANDROID_ARMSYSROOT)/bin/arm-linux-androideabi-g++
+
+$(ANDROID_NDK_ZIPFILE):
+	wget -O $(ANDROID_NDK_ZIPFILE) http://dl.google.com/android/ndk/$(ANDROID_NDK_ZIP)
+	cd venders && tar -xjf $(ANDROID_NDK_ZIP)
+	touch $(ANDROID_NDK_ZIPFILE)
+
+$(ANDROID_CXX_X86): $(ANDROID_NDK_ZIPFILE)
+	venders/$(NDK_VERSION)/build/tools/make-standalone-toolchain.sh --platform=android-9 --install-dir=$(ANDROID_X86SYSROOT) --arch=x86
+	touch $(ANDROID_CXX_X86)	
+
+$(ANDROID_CXX_ARM): $(ANDROID_NDK_ZIPFILE)
+	venders/$(NDK_VERSION)/build/tools/make-standalone-toolchain.sh --platform=android-9 --install-dir=$(ANDROID_ARMSYSROOT) --arch=arm
+	touch $(ANDROID_CXX_ARM)
+
+ANDROID_ARM_JS185_LIB := build/android/lib/js185.a
+
+ANDROID_ALL_LIBS := $(ANDROID_ARM_JS185_LIB)
+
+$(ANDROID_ARM_JS185_LIB): $(ANDROID_CXX_ARM) $(JS_SRC_TAR)
+	mkdir -p build/android/
+	tar -xzf $(JS_SRC_TAR) -C android
+	patch android/js-1.8.5/js/src/assembler/wtf/Platform.h < android/js185-android-build.patch
+	PREFIX="`$(ABSPATH) build/android/`" TOOLCHAIN="`$(ABSPATH) $(ANDROID_ARMSYSROOT)`" NDK="`$(ABSPATH) venders/$(NDK_VERSION)`" SDK="`$(ABSPATH) $(ANDROID_SDK)`" ./android/build-android.sh 
+	
+
