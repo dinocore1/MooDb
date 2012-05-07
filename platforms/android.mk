@@ -1,7 +1,5 @@
 include utils.mk
 
-ANDROID_SDK := ${ANDROID_SDK}
-
 NDK_VERSION := android-ndk-r8
 
 ifeq ($(shell uname),Darwin)
@@ -25,20 +23,36 @@ $(ANDROID_NDK_ZIPFILE):
 
 $(ANDROID_CXX_X86): $(ANDROID_NDK_ZIPFILE)
 	venders/$(NDK_VERSION)/build/tools/make-standalone-toolchain.sh --platform=android-9 --install-dir=$(ANDROID_X86SYSROOT) --arch=x86
-	touch $(ANDROID_CXX_X86)	
+	touch $(ANDROID_CXX_X86)
 
 $(ANDROID_CXX_ARM): $(ANDROID_NDK_ZIPFILE)
 	venders/$(NDK_VERSION)/build/tools/make-standalone-toolchain.sh --platform=android-9 --install-dir=$(ANDROID_ARMSYSROOT) --arch=arm
 	touch $(ANDROID_CXX_ARM)
+	TOOLCHAIN="$(ABSPATH) $(ANDROID_ARMSYSROOT)" ./android/fixtoolchain.sh
 
-ANDROID_ARM_JS185_LIB := build/android/lib/js185.a
+ANDROID_ARM_SQLITE_LIB := build/android/lib/libsqlite3.a
+ANDROID_ARM_JS185_LIB := build/android/lib/libmozjs185-1.0.a
+ANDROID_ARM_MOODB_LIB := build/android/lib/moodb.a
 
-ANDROID_ALL_LIBS := $(ANDROID_ARM_JS185_LIB)
+ANDROID_ALL_LIBS := $(ANDROID_ARM_JS185_LIB) $(ANDROID_ARM_MOODB_LIB) $(ANDROID_ARM_SQLITE_LIB)
+
+$(ANDROID_ARM_SQLITE_LIB): $(ANDROID_CXX_ARM) $(SQLITE_SRC_TAR)
+	tar -xzf $(SQLITE_SRC_TAR) -C android
+	export PATH="`$(ABSPATH) $(ANDROID_ARMSYSROOT)/bin`:${PATH}" && \
+	cd android/sqlite-autoconf-3071100 && \
+	./configure --prefix="`$(ABSPATH) ../../build/android/`" --host=arm-linux-eabi && \
+	make install
+	
 
 $(ANDROID_ARM_JS185_LIB): $(ANDROID_CXX_ARM) $(JS_SRC_TAR)
 	mkdir -p build/android/
 	tar -xzf $(JS_SRC_TAR) -C android
 	patch android/js-1.8.5/js/src/assembler/wtf/Platform.h < android/js185-android-build.patch
-	PREFIX="`$(ABSPATH) build/android/`" TOOLCHAIN="`$(ABSPATH) $(ANDROID_ARMSYSROOT)`" NDK="`$(ABSPATH) venders/$(NDK_VERSION)`" SDK="`$(ABSPATH) $(ANDROID_SDK)`" ./android/build-android.sh 
+	PREFIX="`$(ABSPATH) build/android/`" TOOLCHAIN="`$(ABSPATH) $(ANDROID_ARMSYSROOT)`" NDK="`$(ABSPATH) venders/$(NDK_VERSION)`" ./android/build-android.sh 
+
+$(ANDROID_ARM_MOODB_LIB): $(ANDROID_CXX_ARM) $(ANDROID_ARM_JS185_LIB) $(ANDROID_ARM_SQLITE_LIB)
+	PREFIX="`$(ABSPATH) build/android/`" TOOLCHAIN="`$(ABSPATH) $(ANDROID_ARMSYSROOT)`" PKG_CONFIG_PATH="`$(ABSPATH) build/android/lib/pkgconfig`" ./android/build-moodb.sh
+
+
 	
 
