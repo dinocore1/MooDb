@@ -8,7 +8,6 @@
 
 
 #include <jsapi.h>
-#include <uuid/uuid.h>
 
 #include "moodb.h"
 #include "sqlitewrapper.h"

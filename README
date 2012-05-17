@@ -1,0 +1,6 @@
+------BUILD-------
+
+autoreconf -i
+./configure
+make
+

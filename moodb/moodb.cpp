@@ -1,9 +1,8 @@
 
 #include <string>
 
-#include "moodb/moodb.h"
-
-#include "moodb/common.h"
+#include "moodb.h"
+#include "common.h"
 #include <config.h>
 
 using namespace std;
@@ -146,11 +145,11 @@ int moodb_putobject(moodb *pDB, const char *id, const char* jsonData, char** ppI
 		return MOODB_ERROR;
 	}
 
-	uuidstr_t uuid;
+	std::string uuid;
 	if(id == NULL) {
 		//generate a new UUID for the id of this new item
-		generateUUID(uuid);
-		id = uuid;
+		uuid = generateUUID();
+		id = uuid.c_str();
 	}
 
 	SqliteTransactionScope tr;

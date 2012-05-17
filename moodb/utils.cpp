@@ -6,9 +6,21 @@
  */
 
 #include "common.h"
+#include "Poco/UUID.h"
+#include "Poco/UUIDGenerator.h"
 
-void generateUUID(uuidstr_t newuuid) {
+using Poco::UUID;
+using Poco::UUIDGenerator;
+
+UUIDGenerator& generator = UUIDGenerator::defaultGenerator();
+
+std::string generateUUID() {
+
+	UUID uuid1(generator.create()); // time based
+	return uuid1.toString();
+	/*
 	uuid_t uuid;
 	uuid_generate(uuid);
 	uuid_unparse(uuid, newuuid);
+	*/
 }
