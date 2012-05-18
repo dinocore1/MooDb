@@ -28,7 +28,7 @@ $(ANDROID_CXX_X86): $(ANDROID_NDK_ZIPFILE)
 $(ANDROID_CXX_ARM): $(ANDROID_NDK_ZIPFILE)
 	venders/$(NDK_VERSION)/build/tools/make-standalone-toolchain.sh --platform=android-9 --install-dir=$(ANDROID_ARMSYSROOT) --arch=arm
 	touch $(ANDROID_CXX_ARM)
-	TOOLCHAIN="$(ABSPATH) $(ANDROID_ARMSYSROOT)" ./android/fixtoolchain.sh
+	TOOLCHAIN="`$(ABSPATH) $(ANDROID_ARMSYSROOT)`" ./android/fixtoolchain.sh
 
 ANDROID_ARM_SQLITE_LIB := build/android/lib/libsqlite3.a
 ANDROID_ARM_JS185_LIB := build/android/lib/libmozjs185-1.0.a
