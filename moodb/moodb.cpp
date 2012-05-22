@@ -95,10 +95,16 @@ int reduce(moodb *pDb, const char *viewname) {
 	return MOODB_OK;
 }
 
-int moodb_open(const char *filename, moodb **ppDb) {
-	LOG("opening database: %s", filename);
+moodb::moodb() :
+	logger(Poco::Logger::get("MooDB"))
+{
 
-	moodb *db = new moodb;
+}
+
+int moodb_open(const char *filename, moodb **ppDb) {
+
+	moodb *db = new moodb();
+	poco_information(db->logger, Logger::format("Opening database: $0", filename));
 
 	//init SQL
 
@@ -428,7 +434,7 @@ int moodb_query(moodb *pDB, moocursor **ppCursor, const char* query){
 		}
 
 		sqlCmd += ")";
-		LOG("SQL query: %s", sqlCmd.c_str());
+		poco_debug(pDB->logger, "SQL query: " + sqlCmd);
 
 		moocursor* cursor = new moocursor;
 		cursor->pDB = pDB;

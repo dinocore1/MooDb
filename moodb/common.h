@@ -22,6 +22,9 @@ typedef struct queryobject_t {
 } queryobject_t;
 
 struct moodb {
+public:
+	moodb();
+	Poco::Logger& logger;
 	JSContext *cx;
 	SqliteWrapper db;
 	queryobject_t currentQuery;
@@ -41,6 +44,5 @@ struct moocursor {
 #endif
 
 void setErrorMsg(moodb *db, const char* format, ...);
-#define LOG(format, ...) fprintf(stderr, format, __VA_ARGS__)
 
 #endif /* COMMON_H_ */

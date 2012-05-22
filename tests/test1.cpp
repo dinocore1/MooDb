@@ -5,9 +5,18 @@
  *      Author: paul
  */
 
+#include <iostream>
 #include <moodb/moodb.h>
+#include "Poco/Logger.h"
+#include "Poco/ConsoleChannel.h"
+
+using Poco::Logger;
+using Poco::ConsoleChannel;
 
 int main(int argv, const char* argc) {
+	//setup logging
+	Logger::root().setChannel(new ConsoleChannel());
+
 	moodb* db;
 	moodb_open("test1.db", &db);
 
@@ -18,7 +27,7 @@ int main(int argv, const char* argc) {
 
 	char *data;
 	moodb_getobject(db, "guy", &data);
-	printf("guy value: %s", data);
+	std::cout << "guy value: " << data << std::endl;
 	moodb_free(data);
 
 	moodb_putobject(db, 0, "({ firstname: \"Melanie\", lastname: \"Silverman\", age:25, eyecolor: \"brown\" })", 0);
@@ -31,11 +40,11 @@ int main(int argv, const char* argc) {
 	moocursor *cursor;
 	moodb_query(db, &cursor, "({view: \"m_people\", filter: \"age <> 25\" })");
 
-	printf("\n\nQuery:\n");
+	std::cout << std::endl << "Query:" << std::endl;
 
 	char *key, *value;
 	while(moodbcursor_next(cursor, &key, &value) == MOODB_OK){
-		printf("%s : %s\n", key, value);
+		std::cout << key << " : " << value << std::endl;
 	}
 	moodbcursor_close(cursor);
 

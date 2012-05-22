@@ -8,6 +8,11 @@
 #ifndef UTILS_H_
 #define UTILS_H_
 
+#include "Poco/Logger.h"
+#include "Poco/Format.h"
+
+using Poco::Logger;
+
 
 std::string generateUUID();
 

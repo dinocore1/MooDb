@@ -6,9 +6,9 @@ SUBDIRS = moodb
 
 
 check_PROGRAMS = test1 inserttest
-test1_SOURCES = tests/test1.c
+test1_SOURCES = tests/test1.cpp
 test1_LDADD = moodb/libmoodb.la $(JS_LIBS)
-test1_LDFLAGS = -no-install
+test1_LDFLAGS = -no-install $(POCO_LIBS)
 
 inserttest_SOURCES = tests/inserttest.c
 inserttest_CFLAGS = -pg
