@@ -12,7 +12,7 @@
 #include "Poco/Format.h"
 
 using Poco::Logger;
-
+using Poco::format;
 
 std::string generateUUID();
 

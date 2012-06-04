@@ -108,18 +108,22 @@ int moodb_open(const char *filename, moodb **ppDb) {
 
 	//init SQL
 
-	if(db->db.open(filename) != SQLITE_OK){
+	int sqlerrcode = db->db.open(filename);
+	if(sqlerrcode != SQLITE_OK){
+		poco_error(db->logger, format("Open/create sqlite database failed: %d", sqlerrcode));
 		return MOODB_ERROR;
 	}
 
 	if(db->db.execute_sql("CREATE TABLE IF NOT EXISTS objects ( _id INTEGER PRIMARY KEY, key TEXT, data TEXT, UNIQUE(key) );"
 			"CREATE TABLE IF NOT EXISTS views ( name TEXT PRIMARY KEY, viewSpec TEXT, dirty INTEGER);")
 			!= SQLITE_OK){
+		poco_error(db->logger, "creating initial tables failed");
 		return MOODB_ERROR;
 	}
 
 	//init JS
 	if(initJS(db)){
+		poco_error(db->logger, "init javascript engine failed");
 		return MOODB_ERROR;
 	}
 
@@ -197,7 +201,9 @@ int moodb_putobject(moodb *pDB, const char *id, const char* jsonData, char** ppI
 	tr.setSuccesfull();
 
 	if(ppId != NULL){
-		*ppId = (char*)moodb_malloc(sizeof(char) * strlen(id));
+		size_t strsize = sizeof(char) * (strlen(id) + 1);
+		*ppId = (char*)moodb_malloc(strsize);
+		memset(*ppId, 0, strsize);
 		strcpy(*ppId, id);
 	}
 

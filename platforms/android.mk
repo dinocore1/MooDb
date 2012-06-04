@@ -30,10 +30,10 @@ $(ANDROID_CXX_ARM): $(ANDROID_NDK_ZIPFILE)
 	touch $(ANDROID_CXX_ARM)
 	TOOLCHAIN="`$(ABSPATH) $(ANDROID_ARMSYSROOT)`" ./android/fixtoolchain.sh
 
-ANDROID_ARM_SQLITE_LIB := build/android/lib/libsqlite3.a
-ANDROID_ARM_JS185_LIB := build/android/lib/libmozjs185-1.0.a
-ANDROID_ARM_MOODB_LIB := build/android/lib/moodb.a
-ANDROID_ARM_POCO_LIB := build/android/lib/libPocoFoundation.a
+ANDROID_ARM_SQLITE_LIB := build/android/armeabi/lib/libsqlite3.a
+ANDROID_ARM_JS185_LIB := build/android/armeabi/lib/libmozjs185-1.0.a
+ANDROID_ARM_MOODB_LIB := build/android/armeabi/lib/moodb.a
+ANDROID_ARM_POCO_LIB := build/android/armeabi/lib/libPocoFoundation.a
 
 ANDROID_ALL_LIBS := $(ANDROID_ARM_JS185_LIB) $(ANDROID_ARM_MOODB_LIB) $(ANDROID_ARM_SQLITE_LIB) $(ANDROID_ARM_POCO_LIB)
 
@@ -41,7 +41,7 @@ $(ANDROID_ARM_SQLITE_LIB): $(ANDROID_CXX_ARM) $(SQLITE_SRC_TAR)
 	tar -xzf $(SQLITE_SRC_TAR) -C android
 	export PATH="`$(ABSPATH) $(ANDROID_ARMSYSROOT)/bin`:${PATH}" && \
 	cd android/sqlite-autoconf-3071100 && \
-	./configure --prefix="`$(ABSPATH) ../../build/android/`" --host=arm-linux-eabi && \
+	./configure --prefix="`$(ABSPATH) ../../build/android/armeabi/`" --host=arm-linux-eabi && \
 	make install
 	
 
@@ -49,22 +49,22 @@ $(ANDROID_ARM_JS185_LIB): $(ANDROID_CXX_ARM) $(JS_SRC_TAR)
 	mkdir -p build/android/
 	tar -xzf $(JS_SRC_TAR) -C android
 	patch android/js-1.8.5/js/src/assembler/wtf/Platform.h < android/js185-android-build.patch
-	PREFIX="`$(ABSPATH) build/android/`" TOOLCHAIN="`$(ABSPATH) $(ANDROID_ARMSYSROOT)`" NDK="`$(ABSPATH) venders/$(NDK_VERSION)`" ./android/build-android.sh 
+	PREFIX="`$(ABSPATH) build/android/armeabi/`" TOOLCHAIN="`$(ABSPATH) $(ANDROID_ARMSYSROOT)`" NDK="`$(ABSPATH) venders/$(NDK_VERSION)`" ./android/build-android.sh 
 
 $(ANDROID_ARM_POCO_LIB): $(ANDROID_CXX_ARM) $(POCO_SRC_TAR)
 	tar -xzf $(POCO_SRC_TAR) -C android
 	export PATH="`$(ABSPATH) $(ANDROID_ARMSYSROOT)/bin`:${PATH}" && \
 	cd android/poco-1.4.3p1 && \
-	./configure --prefix="`$(ABSPATH) ../../build/android/`" --config=Android --no-samples --no-tests && \
+	./configure --prefix="`$(ABSPATH) ../../build/android/armeabi/`" --config=Android --no-samples --no-tests && \
 	make install -s -j4
 	
 
 $(ANDROID_ARM_MOODB_LIB): $(ANDROID_CXX_ARM) $(ANDROID_ARM_JS185_LIB) $(ANDROID_ARM_SQLITE_LIB) $(ANDROID_ARM_POCO_LIB)
-	PREFIX="`$(ABSPATH) build/android/`" \
+	PREFIX="`$(ABSPATH) build/android/armeabi/`" \
 	TOOLCHAIN="`$(ABSPATH) $(ANDROID_ARMSYSROOT)`" \
-	PKG_CONFIG_PATH="`$(ABSPATH) build/android/lib/pkgconfig`" \
-	POCO_CFLAGS="-I`$(ABSPATH) build/android/include`" \
-	POCO_LIBS="-L`$(ABSPATH) build/android/lib` -l PocoFoundation" \
+	PKG_CONFIG_PATH="`$(ABSPATH) build/android/armeabi/lib/pkgconfig`" \
+	POCO_CFLAGS="-I`$(ABSPATH) build/android/armeabi/include`" \
+	POCO_LIBS="-L`$(ABSPATH) build/android/armeabi/lib` -l PocoFoundation" \
 	./android/build-moodb.sh
 
 
