@@ -31,6 +31,22 @@ JNIEXPORT jint JNICALL Java_com_devsmart_moodb_MooDBWrapper_moodbclose
 JNIEXPORT jstring JNICALL Java_com_devsmart_moodb_MooDBWrapper_putObject
   (JNIEnv *, jobject, jstring, jstring);
 
+/*
+ * Class:     com_devsmart_moodb_MooDBWrapper
+ * Method:    putView
+ * Signature: (Ljava/lang/String;)V
+ */
+JNIEXPORT void JNICALL Java_com_devsmart_moodb_MooDBWrapper_putView
+  (JNIEnv *, jobject, jstring);
+
+/*
+ * Class:     com_devsmart_moodb_MooDBWrapper
+ * Method:    query
+ * Signature: (Ljava/lang/String;)Lcom/devsmart/moodb/MooDBWrapper/MooDBCursor;
+ */
+JNIEXPORT jobject JNICALL Java_com_devsmart_moodb_MooDBWrapper_query
+  (JNIEnv *, jobject, jstring);
+
 #ifdef __cplusplus
 }
 #endif

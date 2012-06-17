@@ -1,22 +1,6 @@
 
-#include "MooDBWrapper.h"
-#include "moodb/moodb.h"
+#include "moodbcommon.h"
 
-#include "Poco/Logger.h"
-#include "Poco/Foundation.h"
-#include "Poco/Channel.h"
-#include "Poco/Mutex.h"
-#include "Poco/Message.h"
-
-#include <android/log.h>
-#define LOG_TAG "moodbwraper"
-#define LOGI(...) __android_log_print(ANDROID_LOG_INFO,LOG_TAG,__VA_ARGS__)
-#define LOGE(...) __android_log_print(ANDROID_LOG_ERROR,LOG_TAG,__VA_ARGS__)
-
-using Poco::Logger;
-using Poco::Channel;
-using Poco::Message;
-using Poco::FastMutex;
 
 class AndroidLogChannel : public Channel {
 public:
@@ -110,3 +94,61 @@ JNIEXPORT jstring JNICALL Java_com_devsmart_moodb_MooDBWrapper_putObject
 
 	return retval;
 }
+
+JNIEXPORT void JNICALL Java_com_devsmart_moodb_MooDBWrapper_putView
+(JNIEnv *env, jobject thiz, jstring js_viewspec) {
+
+	moodb* pDB = getNativeData(env, thiz);
+
+	const char *viewspec = env->GetStringUTFChars(js_viewspec, 0);
+	if(moodb_putview(pDB, viewspec) == MOODB_OK){
+		LOGI("update view success");
+	} else {
+		char *errorstr;
+		moodb_getlasterror(pDB, &errorstr);
+		LOGE("error updating view: %s", errorstr);
+	}
+
+	env->ReleaseStringUTFChars(js_viewspec, viewspec);
+
+}
+
+JNIEXPORT jobject JNICALL Java_com_devsmart_moodb_MooDBWrapper_query
+(JNIEnv *env, jobject thiz, jstring js_query) {
+
+
+	jclass cursorclass = env->FindClass("com/devsmart/moodb/MooDBCursor");
+	if(cursorclass == NULL){
+		LOGE("could not find MooDBCursor class");
+		return NULL;
+	}
+
+	jmethodID cid = env->GetMethodID(cursorclass, "<init>", "()V");
+	if(cid == NULL){
+		LOGE("could not find MooDBCursor constructor");
+		return NULL;
+	}
+
+
+
+	moodb* pDB = getNativeData(env, thiz);
+	const char *query = env->GetStringUTFChars(js_query, 0);
+
+	moocursor *nativeCursor;
+	if(moodb_query(pDB, &nativeCursor, query) != MOODB_OK){
+		LOGE("error in query");
+		env->ReleaseStringUTFChars(js_query, query);
+		return NULL;
+	}
+	env->ReleaseStringUTFChars(js_query, query);
+
+	jobject retval = env->NewObject(cursorclass, cid);
+
+	//set the native pointer
+	jfieldID npfield = env->GetFieldID(cursorclass, "mNativepointer", "J");
+	env->SetLongField(retval, npfield, (jlong)nativeCursor);
+
+
+	return retval;
+}
+

@@ -54,6 +54,8 @@ int moodbcursor_close(moocursor *pCursor);
 
 void moodb_free(void *);
 
+void moodb_getlasterror(moodb *pDB, char **errorstr);
+
 #ifdef __cplusplus
 }
 #endif

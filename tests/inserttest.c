@@ -22,7 +22,7 @@ int main(int argv, const char* argc) {
 	//execute_update(db, "PRAGMA synchronous = OFF;");
 
 	for(i=0;i<1000;i++){
-		moodb_putobject(db, 0, "({ firstname: \"John\", lastname: \"Doe\", age:50, eyecolor: \"blue\" })", 0);
+		moodb_putobject(db, 0, "{ firstname: \"John\", lastname: \"Doe\", age:50, eyecolor: \"blue\" }", 0);
 	}
 
 	//execute_update(db, "COMMIT TRANSACTION;");

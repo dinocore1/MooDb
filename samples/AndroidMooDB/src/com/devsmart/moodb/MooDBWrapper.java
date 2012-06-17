@@ -17,5 +17,8 @@ public class MooDBWrapper {
 	
 	public native String putObject(String key, String data);
 	
+	public native void putView(String viewspec);
+	
+	public native MooDBCursor query(String query);
 
 }

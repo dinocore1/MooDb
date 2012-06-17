@@ -24,6 +24,10 @@ void setErrorMsg(moodb *db, const char* format, ...) {
 	va_end(args);
 }
 
+void moodb_getlasterror(moodb *pDB, char **errorstr) {
+	*errorstr = pDB->lastError;
+}
+
 int reduce(moodb *pDb, const char *viewname) {
 
 	int retval = MOODB_ERROR;
@@ -148,10 +152,16 @@ void moodb_close(moodb *pDb) {
 int moodb_putobject(moodb *pDB, const char *id, const char* jsonData, char** ppId) {
 	int retval = MOODB_ERROR;
 
+
 	jsval jsdata;
-	if(!JS_EvaluateScript(pDB->cx, JS_GetGlobalObject(pDB->cx), jsonData, strlen(jsonData),
+	std:string sJsonData;
+	sJsonData = "(";
+	sJsonData += jsonData;
+	sJsonData += ")";
+
+	if(!JS_EvaluateScript(pDB->cx, JS_GetGlobalObject(pDB->cx), sJsonData.c_str(), sJsonData.length(),
 			__FILE__, 0, &jsdata)){
-		setErrorMsg(pDB, "error compiling data: %s", jsonData);
+		setErrorMsg(pDB, "error compiling data: %s", sJsonData.c_str());
 		return MOODB_ERROR;
 	}
 
@@ -165,7 +175,7 @@ int moodb_putobject(moodb *pDB, const char *id, const char* jsonData, char** ppI
 	SqliteTransactionScope tr;
 	pDB->db.beginTransaction(&tr);
 
-	retval = pDB->db.execute_update("INSERT OR REPLACE INTO objects (key, data) VALUES (@s, @s)", id, jsonData);
+	retval = pDB->db.execute_update("INSERT OR REPLACE INTO objects (key, data) VALUES (@s, @s)", id, sJsonData.c_str());
 	if(retval != SQLITE_DONE) {return MOODB_ERROR;}
 	pDB->currentQuery.objectId = pDB->db.getLastInsertRow();
 
@@ -241,10 +251,17 @@ int moodb_putview(moodb *pDB, const char *viewspec) {
 	jsval viewval;
 	JSObject *viewObj;
 
-	if(!JS_EvaluateScript(pDB->cx, JS_GetGlobalObject(pDB->cx), viewspec, strlen(viewspec),
-			__FILE__, 0, &viewval)){
-		setErrorMsg(pDB, "error compiling viewspec");
-		return MOODB_ERROR;
+	{
+		std:string sViewspec;
+		sViewspec = "(";
+		sViewspec += viewspec;
+		sViewspec += ")";
+		if(!JS_EvaluateScript(pDB->cx, JS_GetGlobalObject(pDB->cx), sViewspec.c_str(), sViewspec.length(),
+				__FILE__, 0, &viewval)){
+			setErrorMsg(pDB, "error compiling viewspec");
+			return MOODB_ERROR;
+		}
+
 	}
 
 	if(!JSVAL_IS_OBJECT(viewval)){
@@ -377,10 +394,16 @@ int moodb_query(moodb *pDB, moocursor **ppCursor, const char* query){
 	jsval queryval;
 	JSObject *queryObj;
 
-	if(!JS_EvaluateScript(pDB->cx, JS_GetGlobalObject(pDB->cx), query, strlen(query),
-			__FILE__, 0, &queryval)){
-		setErrorMsg(pDB, "error compiling query");
-		return MOODB_ERROR;
+	{
+		std:string sQuery;
+		sQuery = "(";
+		sQuery += query;
+		sQuery += ")";
+		if(!JS_EvaluateScript(pDB->cx, JS_GetGlobalObject(pDB->cx), sQuery.c_str(), sQuery.length(),
+				__FILE__, 0, &queryval)){
+			setErrorMsg(pDB, "error compiling query");
+			return MOODB_ERROR;
+		}
 	}
 
 	if(!JSVAL_IS_OBJECT(queryval)){
