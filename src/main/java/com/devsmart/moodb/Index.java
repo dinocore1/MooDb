@@ -2,12 +2,11 @@ package com.devsmart.moodb;
 
 
 import com.google.gson.JsonElement;
-import com.google.gson.JsonObject;
-import com.google.gson.JsonPrimitive;
-import com.sleepycat.je.*;
+import com.sleepycat.je.DatabaseEntry;
+import com.sleepycat.je.SecondaryDatabase;
+import com.sleepycat.je.SecondaryKeyCreator;
 import org.apache.commons.jxpath.CompiledExpression;
 import org.apache.commons.jxpath.JXPathContext;
-import org.apache.commons.jxpath.JXPathIntrospector;
 import org.apache.commons.jxpath.JXPathNotFoundException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -15,25 +14,16 @@ import org.slf4j.LoggerFactory;
 import java.util.List;
 import java.util.Map;
 
-public class View implements SecondaryKeyCreator {
+public class Index implements SecondaryKeyCreator {
 
-    Logger logger = LoggerFactory.getLogger(View.class);
+    Logger logger = LoggerFactory.getLogger(Index.class);
 
-
-    private final SecondaryDatabase mIndexDB;
-    private final CompiledExpression mXPath;
+    public final CompiledExpression mXPath;
     private final MooDB mMooDBContext;
 
-    protected View(MooDB mooDB, String xpath, Database objectsDB) {
+    protected Index(MooDB mooDB, CompiledExpression xpath) {
         mMooDBContext = mooDB;
-        mXPath = JXPathContext.compile(xpath);
-
-        SecondaryConfig config = new SecondaryConfig();
-        config.setAllowCreate(true);
-        config.setAllowPopulate(true);
-        config.setKeyCreator(this);
-        config.setSortedDuplicates(true);
-        mIndexDB = objectsDB.getEnvironment().openSecondaryDatabase(null, "xpath"+xpath, objectsDB, config);
+        mXPath = xpath;
     }
 
     @Override
@@ -52,6 +42,7 @@ public class View implements SecondaryKeyCreator {
             Object resultObj = mXPath.getValue(ctx);
             String str = mMooDBContext.gson.toJson(resultObj);
             result.setData(Utils.toBytes(str));
+            logger.debug("Index {}: emit key: {}", mXPath, str);
             return true;
         } catch(JXPathNotFoundException e) {
             return false;

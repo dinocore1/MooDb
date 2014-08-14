@@ -11,7 +11,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
 
-public class ViewTest {
+public class IndexTest {
 
     private Map<String, Object> createWidget(String type, int value) {
         HashMap<String, Object> retval = new HashMap<String, Object>();
@@ -55,7 +55,7 @@ public class ViewTest {
 
         //final String xpath = ".[type='car']/value";
         final String xpath = "type";
-        mMooDB.addView(xpath);
+        mMooDB.addIndex(xpath);
 
 
 
