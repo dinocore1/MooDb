@@ -1,6 +1,9 @@
 package com.devsmart.moodb;
 
 
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+import com.google.gson.JsonElement;
 import org.apache.commons.jxpath.CompiledExpression;
 import org.apache.commons.jxpath.JXPathContext;
 import org.apache.commons.jxpath.Pointer;
@@ -45,6 +48,30 @@ public class XPathTest {
         }
 
         System.out.println("done");
+    }
+
+    @Test
+    public void testXPathOnJsonElement() {
+        ArrayList<Map> db = new ArrayList<Map>();
+        for(int i=0;i<5;i++){
+            db.add(createWidget("car", i));
+        }
+        for(int i=0;i<5;i++){
+            db.add(createWidget("plane", i));
+        }
+
+        Gson gson = new GsonBuilder().create();
+        JsonElement obj = gson.toJsonTree(db);
+
+        JXPathContext ctx = JXPathContext.newContext(obj);
+        Iterator it = ctx.iterate(".[(type='car' or type='plane') and value='3']");
+        int i = 0;
+        while(it.hasNext()){
+            Object value = it.next();
+            System.out.println(String.format("%d: %s", i++, value));
+        }
+
+
     }
 
     @Test
