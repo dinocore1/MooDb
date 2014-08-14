@@ -1,6 +1,7 @@
 package com.devsmart.moodb;
 
 import com.google.gson.Gson;
+import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.sleepycat.je.DatabaseEntry;
 
@@ -36,6 +37,19 @@ public class Utils {
         } catch (NoSuchAlgorithmException e) {
             throw new RuntimeException(e);
         }
+    }
+
+    public static Object[] convertJsonArray(JsonArray jsonArray) {
+        Object[] retval = new Object[jsonArray.size()];
+        for(int i=0;i<retval.length;i++){
+            JsonElement element = jsonArray.get(i);
+            if(element.isJsonArray()){
+                retval[i] = convertJsonArray(element.getAsJsonArray());
+            } else {
+                retval[i] = element;
+            }
+        }
+        return retval;
     }
 
 

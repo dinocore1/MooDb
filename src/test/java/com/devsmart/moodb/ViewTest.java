@@ -51,6 +51,8 @@ public class ViewTest {
             mMooDB.insert(createWidget("plane", i));
         }
 
+        mMooDB.insert(new String[]{"this", "is", "my", "array"});
+
         final String xpath = ".[type='car']/value";
         mMooDB.addView(xpath);
 

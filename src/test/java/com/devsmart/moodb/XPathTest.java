@@ -3,9 +3,11 @@ package com.devsmart.moodb;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
+import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import org.apache.commons.jxpath.CompiledExpression;
 import org.apache.commons.jxpath.JXPathContext;
+import org.apache.commons.jxpath.JXPathIntrospector;
 import org.apache.commons.jxpath.Pointer;
 import org.apache.commons.jxpath.ri.Parser;
 import org.apache.commons.jxpath.ri.compiler.LocationPath;
@@ -52,6 +54,7 @@ public class XPathTest {
 
     @Test
     public void testXPathOnJsonElement() {
+
         ArrayList<Map> db = new ArrayList<Map>();
         for(int i=0;i<5;i++){
             db.add(createWidget("car", i));
@@ -62,8 +65,12 @@ public class XPathTest {
 
         Gson gson = new GsonBuilder().create();
         JsonElement obj = gson.toJsonTree(db);
+        Object whattouse = null;
+        if(obj.isJsonArray()){
+            whattouse = Utils.convertJsonArray(obj.getAsJsonArray());
+        }
 
-        JXPathContext ctx = JXPathContext.newContext(obj);
+        JXPathContext ctx = JXPathContext.newContext(whattouse);
         Iterator it = ctx.iterate(".[(type='car' or type='plane') and value='3']");
         int i = 0;
         while(it.hasNext()){
