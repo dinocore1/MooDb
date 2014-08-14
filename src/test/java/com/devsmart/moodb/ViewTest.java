@@ -53,7 +53,8 @@ public class ViewTest {
 
         mMooDB.insert(new String[]{"this", "is", "my", "array"});
 
-        final String xpath = ".[type='car']/value";
+        //final String xpath = ".[type='car']/value";
+        final String xpath = "type";
         mMooDB.addView(xpath);
 
 

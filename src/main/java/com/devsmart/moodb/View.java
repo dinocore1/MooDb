@@ -32,7 +32,8 @@ public class View implements SecondaryKeyCreator {
         config.setAllowCreate(true);
         config.setAllowPopulate(true);
         config.setKeyCreator(this);
-        mIndexDB = objectsDB.getEnvironment().openSecondaryDatabase(null, xpath, objectsDB, config);
+        config.setSortedDuplicates(true);
+        mIndexDB = objectsDB.getEnvironment().openSecondaryDatabase(null, "xpath"+xpath, objectsDB, config);
     }
 
     @Override
