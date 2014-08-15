@@ -44,7 +44,7 @@ public class ExecutionIndexTest {
                         ".[type='car']/id",
                         ".[type='plane]"
                 },
-                new int[][]{ {0,2}, {1}, {-1} }
+                new int[][]{ {-1} }
         });
 
         return retval;
