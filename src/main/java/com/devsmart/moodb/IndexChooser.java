@@ -1,9 +1,6 @@
 package com.devsmart.moodb;
 
-import com.devsmart.moodb.query.JoinQueryEvalNode;
-import com.devsmart.moodb.query.CombineQueryEvalNode;
-import com.devsmart.moodb.query.EqualQueryEvalNode;
-import com.devsmart.moodb.query.QueryEvalNode;
+import com.devsmart.moodb.query.*;
 import org.apache.commons.jxpath.ri.compiler.*;
 
 import java.util.List;
@@ -37,20 +34,30 @@ public class IndexChooser {
 
         if(pred instanceof CoreOperationEqual){
             CoreOperationEqual equalOperation = (CoreOperationEqual) pred;
-
-            EqualQueryEvalNode equalNode = new EqualQueryEvalNode(pred);
-            node.add(equalNode);
-
             Expression[] args = equalOperation.getArguments();
-            for(LocationPath index : mIndexes){
-                if(index.getSteps().length >= step) {
-                    Step indexStep = index.getSteps()[step];
-                    if (args[0].toString().equals(indexStep.toString())) {
-                        equalNode.possibleIndexes.add(index.toString());
 
+
+            boolean foundIndex = false;
+            for(LocationPath index : mIndexes){
+                if(index.getSteps().length >= step){
+                    Step indexStep = index.getSteps()[step];
+
+                    if(indexStep.toString().equals(equalOperation)){
+                        node.add(new IterateIndexQueryEvalNode(index));
+                        foundIndex = true;
+
+                    } else if(args[0].toString().equals(indexStep.toString())){
+                        EqualQueryEvalNode equalNode = new EqualQueryEvalNode(index, args[1].toString());
+                        node.add(equalNode);
+                        foundIndex = true;
                     }
                 }
             }
+
+            if(!foundIndex){
+                node.add(new IterateAllEvalNode());
+            }
+
         } else if(pred instanceof CoreOperationAnd){
             CoreOperationAnd andOperation = (CoreOperationAnd) pred;
 

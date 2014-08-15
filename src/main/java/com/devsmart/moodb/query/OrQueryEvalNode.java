@@ -7,7 +7,7 @@ import org.apache.commons.jxpath.ri.compiler.Expression;
 public class OrQueryEvalNode extends CombineQueryEvalNode {
 
     public OrQueryEvalNode(Expression query) {
-        super(query);
+
     }
 
     @Override

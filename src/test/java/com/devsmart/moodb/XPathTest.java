@@ -14,10 +14,18 @@ import org.apache.commons.jxpath.ri.compiler.LocationPath;
 import org.apache.commons.jxpath.ri.compiler.Step;
 import org.apache.commons.jxpath.ri.compiler.TreeCompiler;
 import org.junit.Test;
+import static org.junit.Assert.*;
 
 import java.util.*;
 
 public class XPathTest {
+
+    @Test
+    public void testValidXPath() {
+        CompiledExpression query = JXPathContext.compile("./id");
+        assertNotNull(query);
+
+    }
 
     private Map<String, Object> createWidget(String type, int value) {
         HashMap<String, Object> retval = new HashMap<String, Object>();
