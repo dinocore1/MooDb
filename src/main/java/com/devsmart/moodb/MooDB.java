@@ -4,28 +4,31 @@ package com.devsmart.moodb;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.sleepycat.je.*;
+import com.sleepycat.je.Cursor;
 import org.apache.commons.jxpath.JXPathContext;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.HashMap;
 import java.util.UUID;
 
 public class MooDB {
 
     private static final String DBNAME_OBJECTS = "objects";
     private static final String DBNAME_VIEWS = "views";
+    private Environment mDBEnv;
 
-    private class IndexObj {
-        Index view;
+
+    private class ViewObj {
+        View view;
+        String name;
         SecondaryDatabase indexDB;
     }
 
     private final File mDBRoot;
     private Database mObjectsDB;
     private Database mViewsDB;
-    private List<IndexObj> mViews = new ArrayList<IndexObj>();
+    private HashMap<String, ViewObj> mViews = new HashMap<String, ViewObj>();
     protected Gson gson = new GsonBuilder().create();
 
     public static MooDB openDatabase(File dbRoot) throws IOException {
@@ -40,21 +43,21 @@ public class MooDB {
 
     private void open() throws IOException {
         mDBRoot.mkdirs();
-        EnvironmentConfig envConfig = new EnvironmentConfig();
-        envConfig.setAllowCreate(true);
-        Environment dbEnv = new Environment(mDBRoot, envConfig);
+        EnvironmentConfig dbEnvConfig = new EnvironmentConfig();
+        dbEnvConfig.setAllowCreate(true);
+        mDBEnv = new Environment(mDBRoot, dbEnvConfig);
 
         {
             DatabaseConfig dbConfig = new DatabaseConfig();
             dbConfig.setAllowCreate(true);
-            mObjectsDB = dbEnv.openDatabase(null, DBNAME_OBJECTS, dbConfig);
+            mObjectsDB = mDBEnv.openDatabase(null, DBNAME_OBJECTS, dbConfig);
         }
 
         {
             DatabaseConfig dbConfig = new DatabaseConfig();
             dbConfig.setAllowCreate(true);
-            mViewsDB = dbEnv.openDatabase(null, DBNAME_VIEWS, dbConfig);
-            loadIndexes();
+            mViewsDB = mDBEnv.openDatabase(null, DBNAME_VIEWS, dbConfig);
+            loadViews();
         }
     }
 
@@ -77,43 +80,61 @@ public class MooDB {
         return mObjectsDB.put(null, dbkey, dbvalue) == OperationStatus.SUCCESS;
     }
 
-    private void loadIndexes() {
+    private void loadViews() {
         Cursor cursor = mViewsDB.openCursor(null, null);
         try {
             DatabaseEntry key = new DatabaseEntry();
             DatabaseEntry value = new DatabaseEntry();
             while(cursor.getNext(key, value, LockMode.DEFAULT) == OperationStatus.SUCCESS){
-                String xpath = Utils.toString(key);
-                addIndex(xpath);
+                String name = Utils.toString(key);
+                String xpath = Utils.toString(value);
+                addView(name, xpath);
             }
         } finally {
             cursor.close();
         }
     }
 
-    protected void addIndex(String xpath) {
-        IndexObj obj = new IndexObj();
-        obj.view = new Index(this, JXPathContext.compile(xpath));
-
+    protected View addView(String name, String xpath) {
+        ViewObj obj = new ViewObj();
+        obj.name = name;
+        obj.view = new View(this, JXPathContext.compile(xpath));
 
         SecondaryConfig config = new SecondaryConfig();
         config.setAllowCreate(true);
         config.setAllowPopulate(true);
         config.setKeyCreator(obj.view);
         config.setSortedDuplicates(true);
-        obj.indexDB = mObjectsDB.getEnvironment().openSecondaryDatabase(null, "xpath" + xpath, mObjectsDB, config);
+        obj.indexDB = mDBEnv.openSecondaryDatabase(null, name, mObjectsDB, config);
+        obj.view.mIndexDB = obj.indexDB;
 
-        mViews.add(obj);
+        mViews.put(name, obj);
+        return obj.view;
+    }
+
+    public XPathCursor query(String xpath) {
+        Cursor cursor = mObjectsDB.openCursor(null, null);
+        XPathCursor retval = new XPathCursor(this, cursor, JXPathContext.compile(xpath));
+        return retval;
+    }
+
+    public View getView(String viewName) {
+        View retval = null;
+        ViewObj obj = mViews.get(viewName);
+        if(obj != null){
+            retval = obj.view;
+        }
+        return retval;
     }
 
     public void close() {
-        for(IndexObj index : mViews){
+        for(ViewObj index : mViews.values()){
             index.indexDB.close();
         }
 
         mViewsDB.close();
-
         mObjectsDB.close();
+        mDBEnv.close();
     }
 
 

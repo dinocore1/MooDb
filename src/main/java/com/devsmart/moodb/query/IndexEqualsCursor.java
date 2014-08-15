@@ -1,5 +1,6 @@
 package com.devsmart.moodb.query;
 
+import com.devsmart.moodb.MooDBCursor;
 import com.sleepycat.je.DatabaseEntry;
 import com.sleepycat.je.LockMode;
 import com.sleepycat.je.OperationStatus;
@@ -7,7 +8,7 @@ import com.sleepycat.je.SecondaryCursor;
 
 import java.util.Arrays;
 
-public class IndexEqualsCursor implements Cursor {
+public class IndexEqualsCursor implements MooDBCursor {
 
     final Direction mDirection;
     private final SecondaryCursor mIndexCursor;

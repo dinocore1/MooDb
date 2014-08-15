@@ -1,11 +1,13 @@
 package com.devsmart.moodb.query;
 
-public class MergeCursor implements Cursor {
+import com.devsmart.moodb.MooDBCursor;
 
-    private Cursor[] mCursor;
+public class MergeCursor implements MooDBCursor {
+
+    private MooDBCursor[] mCursor;
     private int i = 0;
 
-    public MergeCursor(Cursor[] cursors) {
+    public MergeCursor(MooDBCursor[] cursors) {
         mCursor = cursors;
     }
 
@@ -21,7 +23,12 @@ public class MergeCursor implements Cursor {
 
     @Override
     public boolean moveToPrevious() {
-        return false;
+        if(!mCursor[i].moveToPrevious() && i-1 >= 0){
+            i--;
+            return true;
+        } else {
+            return false;
+        }
     }
 
     @Override

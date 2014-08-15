@@ -1,6 +1,7 @@
 package com.devsmart.moodb;
 
 
+import com.google.common.base.Stopwatch;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -39,6 +40,51 @@ public class IndexTest {
     @After
     public void closeDB() {
         mMooDB.close();
+        mMooDB = null;
+    }
+
+    @Test
+    public void testQuery() throws Exception {
+
+        View view = mMooDB.addView("typeview", ".[type='car']");
+
+        for(int i=0;i<5;i++){
+            mMooDB.insert(createWidget("car", i));
+        }
+        for(int i=0;i<5;i++){
+            mMooDB.insert(createWidget("plane", i));
+        }
+        for(int i=0;i<1000000;i++){
+            mMooDB.insert(createWidget("train", i));
+        }
+
+        {
+            Stopwatch stopwatch = Stopwatch.createStarted();
+            XPathCursor cursor = view.query(".[type='car']");
+            while (cursor.moveToNext()) {
+                Object value = cursor.getObj();
+                System.out.println("got value: " + value);
+            }
+            stopwatch.stop();
+            cursor.close();
+            System.out.println(String.format("%d view query took %s", 1000000, stopwatch));
+        }
+
+        {
+            Stopwatch stopwatch = Stopwatch.createStarted();
+            XPathCursor cursor = mMooDB.query(".[type='car']");
+            while (cursor.moveToNext()) {
+                Object value = cursor.getObj();
+                System.out.println("got value: " + value);
+            }
+            stopwatch.stop();
+            cursor.close();
+            System.out.println(String.format("%d query took %s", 1000000, stopwatch));
+        }
+
+
+
+
     }
 
     @Test
@@ -55,9 +101,6 @@ public class IndexTest {
 
         //final String xpath = ".[type='car']/value";
         final String xpath = "type";
-        mMooDB.addIndex(xpath);
-
-
-
+        mMooDB.addView("typeview", xpath);
     }
 }

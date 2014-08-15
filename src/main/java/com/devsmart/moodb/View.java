@@ -2,6 +2,7 @@ package com.devsmart.moodb;
 
 
 import com.google.gson.JsonElement;
+import com.sleepycat.je.Cursor;
 import com.sleepycat.je.DatabaseEntry;
 import com.sleepycat.je.SecondaryDatabase;
 import com.sleepycat.je.SecondaryKeyCreator;
@@ -14,14 +15,15 @@ import org.slf4j.LoggerFactory;
 import java.util.List;
 import java.util.Map;
 
-public class Index implements SecondaryKeyCreator {
+public class View implements SecondaryKeyCreator {
 
-    Logger logger = LoggerFactory.getLogger(Index.class);
+    Logger logger = LoggerFactory.getLogger(View.class);
 
     public final CompiledExpression mXPath;
     private final MooDB mMooDBContext;
+    protected SecondaryDatabase mIndexDB;
 
-    protected Index(MooDB mooDB, CompiledExpression xpath) {
+    protected View(MooDB mooDB, CompiledExpression xpath) {
         mMooDBContext = mooDB;
         mXPath = xpath;
     }
@@ -48,4 +50,11 @@ public class Index implements SecondaryKeyCreator {
             return false;
         }
     }
+
+    public XPathCursor query(String xpath) {
+        Cursor cursor = mIndexDB.openCursor(null, null);
+        XPathCursor retval = new XPathCursor(mMooDBContext, cursor, JXPathContext.compile(xpath));
+        return retval;
+    }
+
 }

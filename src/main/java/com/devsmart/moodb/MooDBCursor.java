@@ -1,6 +1,6 @@
-package com.devsmart.moodb.query;
+package com.devsmart.moodb;
 
-public interface Cursor {
+public interface MooDBCursor {
 
     public static long BEFORE_FIRST = -1;
     public static long AFTER_LAST = -2;

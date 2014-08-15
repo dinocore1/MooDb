@@ -7,11 +7,11 @@ import java.util.Collection;
 public class Query {
 
     private final Path mXPath;
-    private final Collection<Index> mIndexes;
+    private final Collection<View> mViews;
 
-    public Query(Path xpath, Collection<Index> indexes) {
+    public Query(Path xpath, Collection<View> views) {
         mXPath = xpath;
-        mIndexes = indexes;
+        mViews = views;
     }
 
     public void chooseIndexes() {
