@@ -37,6 +37,7 @@ public class QueryTest {
 
         LocationPath index1 = compileXPath("type");
         LocationPath index2 = compileXPath("value");
+        LocationPath index3 = compileXPath(".[type='car']");
 
         LocationPath query = compileXPath(".[type='car' and value='4']");
         //LocationPath query = compileXPath(".[type='car']/");
