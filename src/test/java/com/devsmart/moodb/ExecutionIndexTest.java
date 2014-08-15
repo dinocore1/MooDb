@@ -1,6 +1,11 @@
 package com.devsmart.moodb;
 
 
+import com.devsmart.moodb.query.QueryEvalNode;
+import org.apache.commons.jxpath.ri.Parser;
+import org.apache.commons.jxpath.ri.compiler.LocationPath;
+import org.apache.commons.jxpath.ri.compiler.TreeCompiler;
+import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 
@@ -20,7 +25,7 @@ public class ExecutionIndexTest {
                         "type",
                         "value",
                         ".[type='car']/id",
-                        ".[type='plane]"
+                        ".[type='plane']"
                 },
                 new int[][]{ {0,2}, {1} }
         });
@@ -31,7 +36,7 @@ public class ExecutionIndexTest {
                         "type",
                         "value",
                         ".[type='car']/id",
-                        ".[type='plane]"
+                        ".[type='plane']"
                 },
                 new int[][]{ {0,2}, {1} }
         });
@@ -42,15 +47,48 @@ public class ExecutionIndexTest {
                         "type",
                         "value",
                         ".[type='car']/id",
-                        ".[type='plane]"
+                        ".[type='plane']"
                 },
                 new int[][]{ {-1} }
+        });
+
+        retval.add(new Object[]{
+                "type/[id='35']",
+                new String[]{
+                        "type",
+                        "value",
+                        ".[type='car']/id",
+                        ".[type='plane']"
+                },
+                new int[][]{ {0} }
         });
 
         return retval;
     }
 
-    public ExecutionIndexTest(String query, String[] availableIndexes, int[][] requiredIndexes) {
+    private LocationPath mQuery;
+    private ArrayList<LocationPath> mAvailableIndexes = new ArrayList<LocationPath>();
 
+
+    private static final TreeCompiler COMPILER = new TreeCompiler();
+    private static LocationPath compileXPath(String xpath){
+        return (LocationPath) Parser.parseExpression(xpath, COMPILER);
+    }
+
+    public ExecutionIndexTest(String query, String[] availableIndexes, int[][] requiredIndexes) {
+        mQuery = compileXPath(query);
+        for(String index : availableIndexes){
+            mAvailableIndexes.add(compileXPath(index));
+        }
+
+
+
+    }
+
+    @Test
+    public void testCreateExecutionPlan() {
+        IndexChooser chooser = new IndexChooser(mQuery, mAvailableIndexes);
+        QueryEvalNode executionPlan = chooser.generateExecutionPlan();
+        System.out.println(String.format("%s", executionPlan));
     }
 }
