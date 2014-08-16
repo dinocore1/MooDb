@@ -5,12 +5,11 @@ import com.google.common.base.Stopwatch;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
+import static org.junit.Assert.*;
 
 import java.io.File;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.UUID;
+import java.util.*;
+import java.util.concurrent.TimeUnit;
 
 public class IndexTest {
 
@@ -44,9 +43,28 @@ public class IndexTest {
     }
 
     @Test
+    public void testSimpleInsertGet() {
+        ArrayList<Map> db = new ArrayList<Map>();
+        for(int i=0;i<5;i++){
+            mMooDB.insert(createWidget("car", i));
+        }
+        for(int i=0;i<5;i++){
+            mMooDB.insert(createWidget("plane", i));
+        }
+
+        final String[] inserted = new String[]{"this", "is", "my", "array"};
+        String id = mMooDB.insert(inserted);
+
+        String[] returned = mMooDB.get(id, String[].class);
+
+        assertTrue(Arrays.equals(returned, inserted));
+
+    }
+
+    @Test
     public void testQuery() throws Exception {
 
-        View view = mMooDB.addView("typeview", ".[type='car']");
+        View view = mMooDB.addView("typeview", "type");
 
         for(int i=0;i<5;i++){
             mMooDB.insert(createWidget("car", i));
@@ -58,6 +76,7 @@ public class IndexTest {
             mMooDB.insert(createWidget("train", i));
         }
 
+        long indexTime;
         {
             Stopwatch stopwatch = Stopwatch.createStarted();
             XPathCursor cursor = view.query(".[type='car']");
@@ -68,8 +87,10 @@ public class IndexTest {
             stopwatch.stop();
             cursor.close();
             System.out.println(String.format("%d view query took %s", 1000000, stopwatch));
+            indexTime = stopwatch.elapsed(TimeUnit.MILLISECONDS);
         }
 
+        long nonIndexTime;
         {
             Stopwatch stopwatch = Stopwatch.createStarted();
             XPathCursor cursor = mMooDB.query(".[type='car']");
@@ -80,27 +101,15 @@ public class IndexTest {
             stopwatch.stop();
             cursor.close();
             System.out.println(String.format("%d query took %s", 1000000, stopwatch));
+            nonIndexTime = stopwatch.elapsed(TimeUnit.MILLISECONDS);
         }
 
 
+        long diff = Math.abs(indexTime-nonIndexTime);
+        assertTrue(diff < 100);
 
 
     }
 
-    @Test
-    public void testNewView() {
-        ArrayList<Map> db = new ArrayList<Map>();
-        for(int i=0;i<5;i++){
-            mMooDB.insert(createWidget("car", i));
-        }
-        for(int i=0;i<5;i++){
-            mMooDB.insert(createWidget("plane", i));
-        }
 
-        mMooDB.insert(new String[]{"this", "is", "my", "array"});
-
-        //final String xpath = ".[type='car']/value";
-        final String xpath = "type";
-        mMooDB.addView("typeview", xpath);
-    }
 }

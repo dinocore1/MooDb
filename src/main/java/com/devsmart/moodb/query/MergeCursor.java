@@ -47,4 +47,9 @@ public class MergeCursor implements MooDBCursor {
     public byte[] getData() {
         return mCursor[i].getData();
     }
+
+    @Override
+    public void close() {
+
+    }
 }

@@ -1,11 +1,11 @@
 package com.devsmart.moodb;
 
 
+import com.devsmart.moodb.query.IndexCursor;
+import com.devsmart.moodb.query.IterateIndexQueryEvalNode;
 import com.google.gson.JsonElement;
-import com.sleepycat.je.Cursor;
-import com.sleepycat.je.DatabaseEntry;
-import com.sleepycat.je.SecondaryDatabase;
-import com.sleepycat.je.SecondaryKeyCreator;
+import com.sleepycat.bind.tuple.SortedDoubleBinding;
+import com.sleepycat.je.*;
 import org.apache.commons.jxpath.CompiledExpression;
 import org.apache.commons.jxpath.JXPathContext;
 import org.apache.commons.jxpath.JXPathNotFoundException;
@@ -21,7 +21,7 @@ public class View implements SecondaryKeyCreator {
 
     public final CompiledExpression mXPath;
     private final MooDB mMooDBContext;
-    protected SecondaryDatabase mIndexDB;
+    public SecondaryDatabase mIndexDB;
 
     protected View(MooDB mooDB, CompiledExpression xpath) {
         mMooDBContext = mooDB;
@@ -42,9 +42,19 @@ public class View implements SecondaryKeyCreator {
         JXPathContext ctx = JXPathContext.newContext(xpathObj);
         try {
             Object resultObj = mXPath.getValue(ctx);
-            String str = mMooDBContext.gson.toJson(resultObj);
-            result.setData(Utils.toBytes(str));
-            logger.debug("Index {}: emit key: {}", mXPath, str);
+            if(resultObj instanceof Number) {
+                double value = ((Number)resultObj).doubleValue();
+                SortedDoubleBinding.doubleToEntry(value, result);
+                logger.debug("Index {}: emit key: {}", mXPath, resultObj);
+            } else if(resultObj instanceof String) {
+                result.setData(Utils.toBytes((String)resultObj));
+                logger.debug("Index {}: emit key: {}", mXPath, resultObj);
+            } else {
+                String str = mMooDBContext.gson.toJson(resultObj);
+                result.setData(Utils.toBytes(str));
+                logger.debug("Index {}: emit key: {}", mXPath, str);
+            }
+
             return true;
         } catch(JXPathNotFoundException e) {
             return false;
@@ -52,8 +62,8 @@ public class View implements SecondaryKeyCreator {
     }
 
     public XPathCursor query(String xpath) {
-        Cursor cursor = mIndexDB.openCursor(null, null);
-        XPathCursor retval = new XPathCursor(mMooDBContext, cursor, JXPathContext.compile(xpath));
+        SecondaryCursor cursor = mIndexDB.openCursor(null, null);
+        XPathCursor retval = new XPathCursor(mMooDBContext, new IndexCursor(cursor), JXPathContext.compile(xpath));
         return retval;
     }
 

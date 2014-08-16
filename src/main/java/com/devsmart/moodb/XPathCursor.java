@@ -13,7 +13,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.Closeable;
-import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 
@@ -21,16 +20,14 @@ public class XPathCursor implements MooDBCursor, Closeable {
 
     private Logger logger = LoggerFactory.getLogger(XPathCursor.class);
 
-    private final Cursor mCursor;
+    private final MooDBCursor mCursor;
     private final CompiledExpression mXPath;
     private final MooDB mMooDBContext;
 
-    private DatabaseEntry key = new DatabaseEntry();
-    private DatabaseEntry data = new DatabaseEntry();
     private Object mResultObj;
     private boolean mIsClosed = false;
 
-    protected XPathCursor(MooDB db, Cursor cursor, CompiledExpression xpath) {
+    protected XPathCursor(MooDB db, MooDBCursor cursor, CompiledExpression xpath) {
         mMooDBContext = db;
         mCursor = cursor;
         mXPath = xpath;
@@ -38,14 +35,12 @@ public class XPathCursor implements MooDBCursor, Closeable {
 
     @Override
     public void reset() {
-        if(mCursor.getFirst(key, data, LockMode.DEFAULT)  != OperationStatus.SUCCESS){
-            logger.error("could not reset cursor");
-        }
+        mCursor.reset();
     }
 
     @Override
     public boolean moveToNext() {
-        while(mCursor.getNext(key, data, LockMode.DEFAULT) == OperationStatus.SUCCESS){
+        while(mCursor.moveToNext()){
             if(queryObject() != null){
                 return true;
             }
@@ -55,7 +50,7 @@ public class XPathCursor implements MooDBCursor, Closeable {
 
     @Override
     public boolean moveToPrevious() {
-        while(mCursor.getPrev(key, data, LockMode.DEFAULT) == OperationStatus.SUCCESS){
+        while(mCursor.moveToPrevious()){
             if(queryObject() != null){
                 return true;
             }
@@ -70,7 +65,7 @@ public class XPathCursor implements MooDBCursor, Closeable {
 
     private Object queryObject() {
         Object retval = null;
-        JsonElement jsonElement = Utils.toJsonElement(data, mMooDBContext.gson);
+        JsonElement jsonElement = mMooDBContext.gson.fromJson(Utils.toString(mCursor.getData()), JsonElement.class);
         Object xpathObj = jsonElement;
         if (jsonElement.isJsonObject()) {
             xpathObj = mMooDBContext.gson.fromJson(jsonElement, Map.class);
@@ -89,7 +84,7 @@ public class XPathCursor implements MooDBCursor, Closeable {
 
     @Override
     public byte[] getData() {
-        return data.getData();
+        return mCursor.getData();
     }
 
     public Object getObj() {

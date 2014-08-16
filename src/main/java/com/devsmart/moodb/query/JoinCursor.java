@@ -21,6 +21,11 @@ public class JoinCursor implements MooDBCursor {
 
     @Override
     public boolean moveToNext() {
+        if(mCurors.length == 1){
+            boolean success = mCurors[0].moveToNext();
+            String objectId = mCurors[0].objectId();
+            return success;
+        }
         boolean found = false;
         while(mCurors[0].moveToNext()) {
             String objectId = mCurors[0].objectId();
@@ -82,6 +87,11 @@ public class JoinCursor implements MooDBCursor {
 
     @Override
     public byte[] getData() {
-        return mMooDB.get(mObjectId);
+        return mCurors[0].getData();
+    }
+
+    @Override
+    public void close() {
+
     }
 }

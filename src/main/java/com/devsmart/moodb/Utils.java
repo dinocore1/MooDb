@@ -6,6 +6,9 @@ import com.google.gson.JsonElement;
 import com.sleepycat.je.DatabaseEntry;
 import org.apache.commons.jxpath.CompiledExpression;
 import org.apache.commons.jxpath.JXPathContext;
+import org.apache.commons.jxpath.ri.Parser;
+import org.apache.commons.jxpath.ri.compiler.LocationPath;
+import org.apache.commons.jxpath.ri.compiler.TreeCompiler;
 
 import java.io.UnsupportedEncodingException;
 import java.nio.charset.Charset;
@@ -54,6 +57,11 @@ public class Utils {
             }
         }
         return retval;
+    }
+
+    private static final TreeCompiler COMPILER = new TreeCompiler();
+    public static LocationPath compileXPath(String xpath){
+        return (LocationPath) Parser.parseExpression(xpath, COMPILER);
     }
 
 

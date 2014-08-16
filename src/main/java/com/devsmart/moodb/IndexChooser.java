@@ -1,7 +1,6 @@
 package com.devsmart.moodb;
 
 import com.devsmart.moodb.query.*;
-import org.apache.commons.jxpath.CompiledExpression;
 import org.apache.commons.jxpath.JXPathContext;
 import org.apache.commons.jxpath.ri.compiler.*;
 

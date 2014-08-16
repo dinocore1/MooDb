@@ -1,14 +1,18 @@
 package com.devsmart.moodb;
 
 
+import com.devsmart.moodb.query.QueryEvalNode;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.sleepycat.je.*;
 import com.sleepycat.je.Cursor;
+import org.apache.commons.jxpath.CompiledExpression;
 import org.apache.commons.jxpath.JXPathContext;
+import org.apache.commons.jxpath.ri.compiler.LocationPath;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.UUID;
 
@@ -18,10 +22,13 @@ public class MooDB {
     private static final String DBNAME_VIEWS = "views";
     private Environment mDBEnv;
 
+
+
     private class ViewObj {
         View view;
         String name;
         SecondaryDatabase indexDB;
+        public String indexXPath;
     }
 
     private final File mDBRoot;
@@ -86,6 +93,11 @@ public class MooDB {
         return value.getData();
     }
 
+    public <T> T get(String objectId, Class<T> classType) {
+        String jsonStr = Utils.toString(get(objectId));
+        return gson.fromJson(jsonStr, classType);
+    }
+
 
     private void loadViews() {
         Cursor cursor = mViewsDB.openCursor(null, null);
@@ -105,6 +117,7 @@ public class MooDB {
     protected View addView(String name, String xpath) {
         ViewObj obj = new ViewObj();
         obj.name = name;
+        obj.indexXPath = xpath;
         obj.view = new View(this, JXPathContext.compile(xpath));
 
         SecondaryConfig config = new SecondaryConfig();
@@ -120,9 +133,22 @@ public class MooDB {
     }
 
     public XPathCursor query(String xpath) {
-        Cursor cursor = mObjectsDB.openCursor(null, null);
-        XPathCursor retval = new XPathCursor(this, cursor, JXPathContext.compile(xpath));
-        return retval;
+
+        LocationPath compiledQuery = Utils.compileXPath(xpath);
+        ArrayList<LocationPath> indexes = new ArrayList<LocationPath>(mViews.size());
+        for(ViewObj view : mViews.values()){
+            indexes.add(Utils.compileXPath(view.indexXPath));
+        }
+        IndexChooser indexChooser = new IndexChooser(compiledQuery, indexes);
+        QueryEvalNode executionPlan = indexChooser.generateExecutionPlan();
+        MooDBCursor cursor = executionPlan.createCursor(this);
+        return new XPathCursor(this, cursor, JXPathContext.compile(xpath));
+
+
+
+        //Cursor cursor = mObjectsDB.openCursor(null, null);
+        //XPathCursor retval = new XPathCursor(this, cursor, JXPathContext.compile(xpath));
+        //return retval;
     }
 
     public View getView(String viewName) {
@@ -130,6 +156,17 @@ public class MooDB {
         ViewObj obj = mViews.get(viewName);
         if(obj != null){
             retval = obj.view;
+        }
+        return retval;
+    }
+
+    public View getIndex(String xpath) {
+        View retval = null;
+        for(ViewObj viewObj : mViews.values()){
+            if(viewObj.indexXPath.equals(xpath)){
+                retval = viewObj.view;
+                break;
+            }
         }
         return retval;
     }
