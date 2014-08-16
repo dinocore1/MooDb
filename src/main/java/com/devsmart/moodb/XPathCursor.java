@@ -37,6 +37,13 @@ public class XPathCursor implements MooDBCursor, Closeable {
     }
 
     @Override
+    public void reset() {
+        if(mCursor.getFirst(key, data, LockMode.DEFAULT)  != OperationStatus.SUCCESS){
+            logger.error("could not reset cursor");
+        }
+    }
+
+    @Override
     public boolean moveToNext() {
         while(mCursor.getNext(key, data, LockMode.DEFAULT) == OperationStatus.SUCCESS){
             if(queryObject() != null){
@@ -54,6 +61,11 @@ public class XPathCursor implements MooDBCursor, Closeable {
             }
         }
         return false;
+    }
+
+    @Override
+    public String objectId() {
+        return null;
     }
 
     private Object queryObject() {

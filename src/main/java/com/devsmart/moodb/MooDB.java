@@ -18,7 +18,6 @@ public class MooDB {
     private static final String DBNAME_VIEWS = "views";
     private Environment mDBEnv;
 
-
     private class ViewObj {
         View view;
         String name;
@@ -79,6 +78,14 @@ public class MooDB {
 
         return mObjectsDB.put(null, dbkey, dbvalue) == OperationStatus.SUCCESS;
     }
+
+    public byte[] get(String objectId) {
+        DatabaseEntry key = new DatabaseEntry(Utils.toBytes(objectId));
+        DatabaseEntry value = new DatabaseEntry();
+        mObjectsDB.get(null, key, value, LockMode.DEFAULT);
+        return value.getData();
+    }
+
 
     private void loadViews() {
         Cursor cursor = mViewsDB.openCursor(null, null);

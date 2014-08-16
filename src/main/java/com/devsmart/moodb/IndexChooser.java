@@ -1,6 +1,8 @@
 package com.devsmart.moodb;
 
 import com.devsmart.moodb.query.*;
+import org.apache.commons.jxpath.CompiledExpression;
+import org.apache.commons.jxpath.JXPathContext;
 import org.apache.commons.jxpath.ri.compiler.*;
 
 import java.util.List;
@@ -14,6 +16,20 @@ public class IndexChooser {
     public IndexChooser(LocationPath query, List<LocationPath> indexes) {
         mQuery = query;
         mIndexes = indexes;
+    }
+
+    private LocationPath findIndex(String xpath) {
+        LocationPath retval = null;
+        String expression = JXPathContext.compile(xpath).toString();
+
+        for(LocationPath index : mIndexes){
+            String indexStr = index.toString();
+            if(expression.equals(indexStr)){
+                retval = index;
+                break;
+            }
+        }
+        return retval;
     }
 
     public QueryEvalNode generateExecutionPlan() {
@@ -36,25 +52,18 @@ public class IndexChooser {
             CoreOperationEqual equalOperation = (CoreOperationEqual) pred;
             Expression[] args = equalOperation.getArguments();
 
+            String key = args[0].toString();
+            Object value = args[1].compute(null);
 
-            boolean foundIndex = false;
-            for(LocationPath index : mIndexes){
-                if(index.getSteps().length >= step){
-                    Step indexStep = index.getSteps()[step];
-
-                    if(indexStep.toString().equals(equalOperation)){
-                        node.add(new IterateIndexQueryEvalNode(index));
-                        foundIndex = true;
-
-                    } else if(args[0].toString().equals(indexStep.toString())){
-                        EqualQueryEvalNode equalNode = new EqualQueryEvalNode(index, args[1].toString());
-                        node.add(equalNode);
-                        foundIndex = true;
-                    }
-                }
+            StringBuilder possibleIndex = new StringBuilder();
+            for(int i=0;i<step;i++){
+                possibleIndex.append("./");
             }
-
-            if(!foundIndex){
+            possibleIndex.append(key);
+            LocationPath index = findIndex(possibleIndex.toString());
+            if(index != null){
+                node.add(new EqualQueryEvalNode(index, value));
+            } else {
                 node.add(new IterateAllEvalNode());
             }
 
@@ -65,37 +74,14 @@ public class IndexChooser {
             node.add(newNode);
             generateExecutionPlan(newNode, andOperation.getArguments()[0], step);
             generateExecutionPlan(newNode, andOperation.getArguments()[1], step);
+        } else if(pred instanceof CoreOperationOr) {
+            CoreOperationOr orOperation = (CoreOperationOr) pred;
+
+            OrQueryEvalNode newNode = new OrQueryEvalNode(pred);
+            node.add(newNode);
+            generateExecutionPlan(newNode, orOperation.getArguments()[0], step);
+            generateExecutionPlan(newNode, orOperation.getArguments()[1], step);
         }
     }
 
-    /*
-    private void generateExpressionPlan(ExpressionNode queryPredicate, int step) {
-        if(queryPredicate.xpathExpression instanceof CoreOperationEqual){
-            CoreOperationEqual equalOperation = (CoreOperationEqual) queryPredicate.xpathExpression;
-            for(Expression arg : equalOperation.getArguments()){
-                if(arg instanceof LocationPath) {
-                    final String predicateNode = arg.toString();
-                    for(LocationPath index : mIndexes){
-                        if(index.getSteps().length >= step) {
-                            Step indexStep = index.getSteps()[step];
-                            if (predicateNode.equals(indexStep.toString())) {
-                                queryPredicate.andPossibleIndexes.add(index);
-                            }
-                        }
-                    }
-                }
-            }
-
-        } else if(queryPredicate.xpathExpression instanceof CoreOperationAnd){
-            CoreOperationAnd andOperation = (CoreOperationAnd) queryPredicate.xpathExpression;
-            for(Expression e : andOperation.getArguments()){
-                ExpressionNode child = new ExpressionNode();
-                child.xpathExpression = e;
-                queryPredicate.addChild(child);
-                generateExpressionPlan(child, step);
-            }
-
-        }
-    }
-    */
 }

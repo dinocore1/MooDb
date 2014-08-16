@@ -5,10 +5,14 @@ import com.sleepycat.je.DatabaseEntry;
 import com.sleepycat.je.LockMode;
 import com.sleepycat.je.OperationStatus;
 import com.sleepycat.je.SecondaryCursor;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.Arrays;
 
 public class IndexEqualsCursor implements MooDBCursor {
+
+    Logger logger = LoggerFactory.getLogger(IndexEqualsCursor.class);
 
     final Direction mDirection;
     private final SecondaryCursor mIndexCursor;
@@ -23,6 +27,13 @@ public class IndexEqualsCursor implements MooDBCursor {
         mKey = key;
         if(mIndexCursor.getSearchKey(new DatabaseEntry(key), data, LockMode.DEFAULT) != OperationStatus.SUCCESS){
             mLocation = 0;
+        }
+    }
+
+    @Override
+    public void reset() {
+        if(mIndexCursor.getSearchKey(new DatabaseEntry(mKey), data, LockMode.DEFAULT) != OperationStatus.SUCCESS){
+            logger.error("could not reset cursor");
         }
     }
 
@@ -60,6 +71,11 @@ public class IndexEqualsCursor implements MooDBCursor {
             mLocation--;
         }
         return success;
+    }
+
+    @Override
+    public String objectId() {
+        return null;
     }
 
     @Override

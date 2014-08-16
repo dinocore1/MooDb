@@ -12,6 +12,13 @@ public class MergeCursor implements MooDBCursor {
     }
 
     @Override
+    public void reset() {
+        for(MooDBCursor cursor : mCursor){
+            cursor.reset();
+        }
+    }
+
+    @Override
     public boolean moveToNext() {
         if(!mCursor[i].moveToNext() && i+1 < mCursor.length){
             i++;
@@ -29,6 +36,11 @@ public class MergeCursor implements MooDBCursor {
         } else {
             return false;
         }
+    }
+
+    @Override
+    public String objectId() {
+        return null;
     }
 
     @Override

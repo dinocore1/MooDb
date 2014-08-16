@@ -53,7 +53,7 @@ public class ExecutionIndexTest {
         });
 
         retval.add(new Object[]{
-                "type/[id='35']",
+                "type/.[id='35']",
                 new String[]{
                         "type",
                         "value",
