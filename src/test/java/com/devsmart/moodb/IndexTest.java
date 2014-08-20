@@ -72,41 +72,47 @@ public class IndexTest {
         for(int i=0;i<5;i++){
             mMooDB.insert(createWidget("plane", i));
         }
-        for(int i=0;i<1000000;i++){
+        for(int i=0;i<500000;i++){
             mMooDB.insert(createWidget("train", i));
         }
 
-        long indexTime;
+        long queryTime;
+        ArrayList<String> queryResult = new ArrayList<String>();
         {
             Stopwatch stopwatch = Stopwatch.createStarted();
-            XPathCursor cursor = view.query(".[type='car']");
+            XPathCursor cursor = mMooDB.query(".[type='car']/id");
             while (cursor.moveToNext()) {
                 Object value = cursor.getObj();
                 System.out.println("got value: " + value);
-            }
-            stopwatch.stop();
-            cursor.close();
-            System.out.println(String.format("%d view query took %s", 1000000, stopwatch));
-            indexTime = stopwatch.elapsed(TimeUnit.MILLISECONDS);
-        }
-
-        long nonIndexTime;
-        {
-            Stopwatch stopwatch = Stopwatch.createStarted();
-            XPathCursor cursor = mMooDB.query(".[type='car']");
-            while (cursor.moveToNext()) {
-                Object value = cursor.getObj();
-                System.out.println("got value: " + value);
+                queryResult.add((String)value);
             }
             stopwatch.stop();
             cursor.close();
             System.out.println(String.format("%d query took %s", 1000000, stopwatch));
-            nonIndexTime = stopwatch.elapsed(TimeUnit.MILLISECONDS);
+            queryTime = stopwatch.elapsed(TimeUnit.MILLISECONDS);
         }
 
+        long viewTime;
+        ArrayList<String> viewResult = new ArrayList<String>();
+        {
+            Stopwatch stopwatch = Stopwatch.createStarted();
+            XPathCursor cursor = view.query(".[type='car']/id");
+            while (cursor.moveToNext()) {
+                Object value = cursor.getObj();
+                System.out.println("got value: " + value);
+                viewResult.add((String)value);
+            }
+            stopwatch.stop();
+            cursor.close();
+            System.out.println(String.format("%d view query took %s", 1000000, stopwatch));
+            viewTime = stopwatch.elapsed(TimeUnit.MILLISECONDS);
+        }
 
-        long diff = Math.abs(indexTime-nonIndexTime);
-        assertTrue(diff < 100);
+        Collections.sort(queryResult);
+        Collections.sort(viewResult);
+        assertArrayEquals("", queryResult.toArray(new String[1]), viewResult.toArray(new String[1]));
+
+        assertTrue(queryTime < viewTime);
 
 
     }

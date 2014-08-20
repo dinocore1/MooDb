@@ -50,6 +50,8 @@ public class MergeCursor implements MooDBCursor {
 
     @Override
     public void close() {
-
+        for(MooDBCursor cursor : mCursor) {
+            cursor.close();
+        }
     }
 }

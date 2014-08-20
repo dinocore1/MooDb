@@ -85,6 +85,7 @@ public class IndexCursor implements MooDBCursor {
 
     @Override
     public void close() {
-
+        mIndexCursor.close();
+        mStartCursor.close();
     }
 }

@@ -92,6 +92,8 @@ public class JoinCursor implements MooDBCursor {
 
     @Override
     public void close() {
-
+        for(MooDBCursor cursor : mCurors){
+            cursor.close();
+        }
     }
 }
