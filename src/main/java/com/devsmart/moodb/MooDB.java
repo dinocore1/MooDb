@@ -6,7 +6,6 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.sleepycat.je.*;
 import com.sleepycat.je.Cursor;
-import org.apache.commons.jxpath.CompiledExpression;
 import org.apache.commons.jxpath.JXPathContext;
 import org.apache.commons.jxpath.ri.compiler.LocationPath;
 
@@ -21,8 +20,6 @@ public class MooDB {
     private static final String DBNAME_OBJECTS = "objects";
     private static final String DBNAME_VIEWS = "views";
     private Environment mDBEnv;
-
-
 
     private class ViewObj {
         View view;
@@ -70,14 +67,14 @@ public class MooDB {
     public String insert(Object obj) {
         String id = UUID.randomUUID().toString();
 
-        if(insert(id, obj)) {
+        if(put(id, obj)) {
             return id;
         } else {
             return null;
         }
     }
 
-    public boolean insert(String key, Object obj) {
+    public boolean put(String key, Object obj) {
         DatabaseEntry dbkey = new DatabaseEntry(Utils.toBytes(key));
 
         String jsonStr = gson.toJson(obj);
@@ -94,8 +91,18 @@ public class MooDB {
     }
 
     public <T> T get(String objectId, Class<T> classType) {
-        String jsonStr = Utils.toString(get(objectId));
-        return gson.fromJson(jsonStr, classType);
+        byte[] data = get(objectId);
+        if(data != null) {
+            String jsonStr = Utils.toString(data);
+            return gson.fromJson(jsonStr, classType);
+        } else {
+            return null;
+        }
+    }
+
+    public boolean delete(String objId) {
+        DatabaseEntry key = new DatabaseEntry(Utils.toBytes(objId));
+        return mObjectsDB.delete(null, key) == OperationStatus.SUCCESS;
     }
 
 
