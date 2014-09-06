@@ -23,7 +23,9 @@ public class JoinCursor implements MooDBCursor {
     public boolean moveToNext() {
         if(mCurors.length == 1){
             boolean success = mCurors[0].moveToNext();
-            String objectId = mCurors[0].objectId();
+            if(success) {
+                String objectId = mCurors[0].objectId();
+            }
             return success;
         }
         boolean found = false;

@@ -12,6 +12,7 @@ import org.slf4j.LoggerFactory;
 
 public class IndexEqualCursor implements MooDBCursor {
 
+    private final OperationStatus mStatus;
     Logger logger = LoggerFactory.getLogger(IndexEqualCursor.class);
 
     private SecondaryCursor mStartCursor;
@@ -25,13 +26,11 @@ public class IndexEqualCursor implements MooDBCursor {
         this.key = key;
         mIndexCursor = cursor;
 
-        OperationStatus status = mIndexCursor.getSearchKey(key, pkey, data, LockMode.DEFAULT);
-        if(status != OperationStatus.SUCCESS){
-            String errorStr = String.format("error searching for key: %s", status);
-            logger.error(errorStr);
-            throw new RuntimeException(errorStr);
+        mStatus = mIndexCursor.getSearchKey(key, pkey, data, LockMode.DEFAULT);
+        if(mStatus == OperationStatus.SUCCESS){
+            mStartCursor = mIndexCursor.dup(true);
         }
-        mStartCursor = mIndexCursor.dup(true);
+
     }
 
     @Override
@@ -44,6 +43,9 @@ public class IndexEqualCursor implements MooDBCursor {
 
     @Override
     public boolean moveToNext() {
+        if(mStatus == OperationStatus.NOTFOUND) {
+            return false;
+        }
         if(mLocation == BEFORE_FIRST){
             mLocation = 0;
             return true;
@@ -60,6 +62,9 @@ public class IndexEqualCursor implements MooDBCursor {
 
     @Override
     public boolean moveToPrevious() {
+        if(mStatus == OperationStatus.NOTFOUND) {
+            return false;
+        }
         if(mLocation == BEFORE_FIRST){
             return false;
         }
@@ -83,7 +88,9 @@ public class IndexEqualCursor implements MooDBCursor {
 
     @Override
     public void close() {
-        mStartCursor.close();
+        if(mStartCursor != null) {
+            mStartCursor.close();
+        }
         mIndexCursor.close();
     }
 }

@@ -48,6 +48,7 @@ public class MooDB {
         mDBRoot.mkdirs();
         EnvironmentConfig dbEnvConfig = new EnvironmentConfig();
         dbEnvConfig.setAllowCreate(true);
+        dbEnvConfig.setTransactional(true);
         mDBEnv = new Environment(mDBRoot, dbEnvConfig);
 
         {
@@ -62,6 +63,10 @@ public class MooDB {
             mViewsDB = mDBEnv.openDatabase(null, DBNAME_VIEWS, dbConfig);
             loadViews();
         }
+    }
+
+    public MooDBTransaction beginTransaction() {
+        return new MooDBTransaction(mDBEnv.beginTransaction(null, null));
     }
 
     public String insert(Object obj) {
@@ -97,6 +102,19 @@ public class MooDB {
             return gson.fromJson(jsonStr, classType);
         } else {
             return null;
+        }
+    }
+
+    public <T> T getOne(String xpath, Class<T> classType) {
+        XPathCursor cursor = query(xpath);
+        try {
+            if (cursor.moveToNext()) {
+                return (T) cursor.getObj();
+            } else {
+                return null;
+            }
+        } finally {
+            cursor.close();
         }
     }
 
@@ -158,15 +176,6 @@ public class MooDB {
         //return retval;
     }
 
-    public View getView(String viewName) {
-        View retval = null;
-        ViewObj obj = mViews.get(viewName);
-        if(obj != null){
-            retval = obj.view;
-        }
-        return retval;
-    }
-
     public View getIndex(String xpath) {
         View retval = null;
         for(ViewObj viewObj : mViews.values()){
@@ -174,6 +183,9 @@ public class MooDB {
                 retval = viewObj.view;
                 break;
             }
+        }
+        if(retval == null) {
+            retval = addView(xpath, xpath);
         }
         return retval;
     }
