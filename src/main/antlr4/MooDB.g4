@@ -4,6 +4,7 @@ evaluation
     : ID? predicate?
     ;
 
+
 predicate
     : '[' expr ']'
     ;
@@ -13,8 +14,8 @@ expr
     | l=expr 'and' r=expr #andExpr
     | l=expr 'or' r=expr #orExpr
     | '(' expr ')' #expr1
-    | ID # expr2
-    | STRINGLITERAL #expr3
+    | ID # exprId
+    | STRINGLITERAL #exprStrLit
     ;
 
 
