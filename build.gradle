@@ -1,11 +1,50 @@
+buildscript {
+    repositories {
+        maven {
+            name 'JFrog OSS snapshot repo'
+            url  'https://oss.jfrog.org/oss-snapshot-local/'
+        }
+        jcenter()
+    }
+
+    dependencies {
+        classpath 'me.champeau.gradle:antlr4-gradle-plugin:0.1'
+    }
+}
+
+
 apply plugin: 'java'
+apply plugin: 'me.champeau.gradle.antlr4'
+
+antlr4.output = file('src/main/generated-sources/com/devsmart/moodb')
+antlr4.extraArgs = ['-package', 'com.devsmart.moodb']
+
 
 repositories {
     mavenCentral()
 }
 
+sourceSets {
+    main {
+        java {
+            srcDir 'src/main/java'
+            srcDir 'src/main/generated-sources'
+        }
+    }
+}
+
+compileJava {
+    dependsOn antlr4
+}
+
+clean {
+    delete antlr4.output
+}
+
+
 dependencies {
     compile 'org.slf4j:slf4j-api:1.7.5'
+    compile 'org.antlr:antlr4:4.2.2'
     compile 'com.google.code.gson:gson:2.3'
     compile 'com.sleepycat:je:5.0.73'
     compile 'commons-jxpath:commons-jxpath:1.3'
