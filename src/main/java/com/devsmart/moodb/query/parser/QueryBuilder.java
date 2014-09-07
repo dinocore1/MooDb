@@ -10,15 +10,18 @@ import org.antlr.v4.runtime.tree.TerminalNode;
 public class QueryBuilder extends MooDBBaseVisitor<Void> {
 
     ParseTreeProperty<Object> prop = new ParseTreeProperty<Object>();
-    public ObjectQuery query;
+    public Step query;
 
     @Override
     public Void visitEvaluation(@NotNull MooDBParser.EvaluationContext ctx) {
 
-        ExtractField getField = null;
+        ObjectOperation op = null;
+
         TerminalNode field = ctx.ID();
         if(field != null) {
-            getField = new ExtractField(field.getText());
+            op = new ExtractField(field.getText());
+        } else {
+            op = new NoOp();
         }
 
         Predicate predicate = null;
@@ -28,8 +31,35 @@ public class QueryBuilder extends MooDBBaseVisitor<Void> {
             predicate = (Predicate) prop.get(predicateCtx);
         }
 
-        query = new ObjectQuery(getField, predicate);
+        query = new Step(op, predicate);
+
+        MooDBParser.StepContext nextStepCtx = ctx.step();
+        if(nextStepCtx != null) {
+            visit(nextStepCtx);
+            query.setNextStep((Step) prop.get(nextStepCtx));
+        }
+
         prop.put(ctx, query);
+        return null;
+    }
+
+    @Override
+    public Void visitStep(@NotNull MooDBParser.StepContext ctx) {
+        ObjectOperation op = new ExtractField(ctx.ID().getText());
+        Predicate predicate = null;
+        MooDBParser.PredicateContext predicateCtx = ctx.predicate();
+        if(predicateCtx != null) {
+            visit(predicateCtx);
+            predicate = (Predicate) prop.get(predicateCtx);
+        }
+
+        Step step = new Step(op, predicate);
+        MooDBParser.StepContext nextStepCtx = ctx.step();
+        if(nextStepCtx != null) {
+            visit(nextStepCtx);
+            step.setNextStep((Step) prop.get(nextStepCtx));
+        }
+        prop.put(ctx, step);
         return null;
     }
 

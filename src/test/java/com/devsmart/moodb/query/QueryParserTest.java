@@ -7,8 +7,13 @@ import com.devsmart.moodb.query.parser.QueryBuilder;
 import org.antlr.v4.runtime.ANTLRInputStream;
 import org.antlr.v4.runtime.CommonTokenStream;
 import org.junit.Test;
+import static org.junit.Assert.*;
 
 public class QueryParserTest {
+
+    public static class Test1 {
+        String type;
+    }
 
     @Test
     public void testParser() {
@@ -19,6 +24,18 @@ public class QueryParserTest {
         MooDBParser.EvaluationContext tree = parser.evaluation();
         QueryBuilder queryBuilder = new QueryBuilder();
         queryBuilder.visit(tree);
+
+
+        Test1 obj = new Test1();
+        obj.type = "plane";
+
+        Object returnobj = queryBuilder.query.eval(obj);
+        assertNull(returnobj);
+
+        obj = new Test1();
+        obj.type = "train";
+        returnobj = queryBuilder.query.eval(obj);
+        assertNotNull(returnobj);
 
 
 

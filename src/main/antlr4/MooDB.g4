@@ -1,9 +1,13 @@
 grammar MooDB;
 
 evaluation
-    : ID? predicate?
+    : ID predicate? step?
+    | predicate step?
     ;
 
+step
+    : '/' ID predicate? step?
+    ;
 
 predicate
     : '[' expr ']'
