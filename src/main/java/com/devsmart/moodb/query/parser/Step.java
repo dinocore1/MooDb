@@ -60,11 +60,14 @@ public class Step implements ObjectOperation {
     }
 
     private Object evalOne(Object input) {
-        Object retval = null;
-        Object temp = mOperation.eval(input);
-        if(temp != null && mPredicate!=null && mPredicate.matches(temp)) {
-            retval = temp;
+        if(mPredicate != null) {
+            if(mPredicate.matches(input)){
+                return mOperation.eval(input);
+            } else {
+                return null;
+            }
+        } else {
+            return mOperation.eval(input);
         }
-        return retval;
     }
 }

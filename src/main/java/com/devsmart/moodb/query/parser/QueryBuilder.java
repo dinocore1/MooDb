@@ -1,7 +1,10 @@
 package com.devsmart.moodb.query.parser;
 
 import com.devsmart.moodb.MooDBBaseVisitor;
+import com.devsmart.moodb.MooDBLexer;
 import com.devsmart.moodb.MooDBParser;
+import org.antlr.v4.runtime.ANTLRInputStream;
+import org.antlr.v4.runtime.CommonTokenStream;
 import org.antlr.v4.runtime.misc.NotNull;
 import org.antlr.v4.runtime.tree.ParseTreeProperty;
 import org.antlr.v4.runtime.tree.TerminalNode;
@@ -9,8 +12,17 @@ import org.antlr.v4.runtime.tree.TerminalNode;
 
 public class QueryBuilder extends MooDBBaseVisitor<Void> {
 
+    public static ObjectOperation compile(String query) {
+        MooDBLexer lexer = new MooDBLexer(new ANTLRInputStream(query));
+        MooDBParser parser = new MooDBParser(new CommonTokenStream(lexer));
+        MooDBParser.EvaluationContext tree = parser.evaluation();
+        QueryBuilder builder = new QueryBuilder();
+        builder.visit(tree);
+        return builder.query;
+    }
+
     ParseTreeProperty<Object> prop = new ParseTreeProperty<Object>();
-    public Step query;
+    public ObjectOperation query;
 
     @Override
     public Void visitEvaluation(@NotNull MooDBParser.EvaluationContext ctx) {
@@ -31,15 +43,16 @@ public class QueryBuilder extends MooDBBaseVisitor<Void> {
             predicate = (Predicate) prop.get(predicateCtx);
         }
 
-        query = new Step(op, predicate);
+        Step step = new Step(op, predicate);
 
         MooDBParser.StepContext nextStepCtx = ctx.step();
         if(nextStepCtx != null) {
             visit(nextStepCtx);
-            query.setNextStep((Step) prop.get(nextStepCtx));
+            step.setNextStep((Step) prop.get(nextStepCtx));
         }
 
-        prop.put(ctx, query);
+        prop.put(ctx, step);
+        query = step;
         return null;
     }
 
