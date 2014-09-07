@@ -11,9 +11,7 @@ import static org.junit.Assert.*;
 
 public class QueryParserTest {
 
-    public static class Test1 {
-        String type;
-    }
+
 
     @Test
     public void testParser() {
@@ -25,6 +23,10 @@ public class QueryParserTest {
         QueryBuilder queryBuilder = new QueryBuilder();
         queryBuilder.visit(tree);
 
+
+        class Test1 {
+            String type;
+        }
 
         Test1 obj = new Test1();
         obj.type = "plane";

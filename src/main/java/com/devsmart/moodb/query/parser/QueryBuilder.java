@@ -72,13 +72,15 @@ public class QueryBuilder extends MooDBBaseVisitor<Void> {
 
     @Override
     public Void visitEvalExpr(@NotNull MooDBParser.EvalExprContext ctx) {
-        if("=".equals(ctx.o.getText())){
-            visit(ctx.l);
-            visit(ctx.r);
+        visit(ctx.l);
+        String leftStr = (String) prop.get(ctx.l);
+        ObjectOperation leftOp = new ExtractField(leftStr);
 
-            prop.put(ctx, new EqualsPredicate(new ExtractField((String)prop.get(ctx.l)), (String)prop.get(ctx.r)));
-        }
+        visit(ctx.r);
+        String rightStr = (String) prop.get(ctx.r);
 
+        Predicate predicate = new ComparatorPredicate(leftOp, rightStr, ctx.o.getText());
+        prop.put(ctx, predicate);
         return null;
     }
 

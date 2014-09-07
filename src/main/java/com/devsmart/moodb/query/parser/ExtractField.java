@@ -1,9 +1,14 @@
 package com.devsmart.moodb.query.parser;
 
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.lang.reflect.Field;
 
 public class ExtractField implements ObjectOperation {
+
+    Logger logger = LoggerFactory.getLogger(ExtractField.class);
 
     public final String memberName;
 
@@ -19,7 +24,7 @@ public class ExtractField implements ObjectOperation {
             field.setAccessible(true);
             retval = field.get(input);
         } catch (Exception e){
-            e.printStackTrace();
+            logger.warn("cannot get field", e);
         }
         return retval;
     }
