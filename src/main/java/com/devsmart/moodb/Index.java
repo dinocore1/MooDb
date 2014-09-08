@@ -11,7 +11,7 @@ import com.sleepycat.je.SecondaryMultiKeyCreator;
 
 import java.util.Set;
 
-public class Index implements SecondaryMultiKeyCreator, Comparable<Object> {
+public class Index implements SecondaryMultiKeyCreator, Comparable<Index> {
 
     public final String indexQuery;
     private ObjectOperation mObjectOperation;
@@ -72,13 +72,7 @@ public class Index implements SecondaryMultiKeyCreator, Comparable<Object> {
     }
 
     @Override
-    public int compareTo(Object other) {
-        if(other instanceof String){
-            return indexQuery.compareTo((String) other);
-        } else if(other instanceof Index) {
-            return indexQuery.compareTo(((Index)other).indexQuery);
-        } else {
-            throw new IllegalArgumentException();
-        }
+    public int compareTo(Index other) {
+        return indexQuery.compareTo(other.indexQuery);
     }
 }
