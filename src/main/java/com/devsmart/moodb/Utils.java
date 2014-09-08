@@ -1,21 +1,14 @@
 package com.devsmart.moodb;
 
-import com.google.gson.Gson;
-import com.google.gson.JsonArray;
+import com.devsmart.moodb.objects.DBElement;
+import com.devsmart.moodb.objects.JsonElementDBWrapper;
 import com.google.gson.JsonElement;
+import com.google.gson.JsonParser;
 import com.sleepycat.je.DatabaseEntry;
-import org.apache.commons.jxpath.CompiledExpression;
-import org.apache.commons.jxpath.JXPathContext;
-import org.apache.commons.jxpath.ri.Parser;
-import org.apache.commons.jxpath.ri.compiler.LocationPath;
-import org.apache.commons.jxpath.ri.compiler.TreeCompiler;
 
-import java.io.UnsupportedEncodingException;
 import java.nio.charset.Charset;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
-import java.util.List;
-import java.util.Map;
 
 public class Utils {
 
@@ -34,10 +27,6 @@ public class Utils {
         return retval;
     }
 
-    public static JsonElement toJsonElement(DatabaseEntry entry, Gson gson) {
-        return gson.fromJson(toString(entry), JsonElement.class);
-    }
-
     public static MessageDigest getSha1Hash() {
         try {
             return MessageDigest.getInstance("SHA-1");
@@ -46,23 +35,10 @@ public class Utils {
         }
     }
 
-    public static Object[] convertJsonArray(JsonArray jsonArray) {
-        Object[] retval = new Object[jsonArray.size()];
-        for(int i=0;i<retval.length;i++){
-            JsonElement element = jsonArray.get(i);
-            if(element.isJsonArray()){
-                retval[i] = convertJsonArray(element.getAsJsonArray());
-            } else {
-                retval[i] = element;
-            }
-        }
-        return retval;
+
+    public static DBElement toDBElement(DatabaseEntry data) {
+        String jsonStr = toString(data.getData());
+        JsonElement element = new JsonParser().parse(jsonStr);
+        return JsonElementDBWrapper.wrap(element);
     }
-
-    private static final TreeCompiler COMPILER = new TreeCompiler();
-    public static LocationPath compileXPath(String xpath){
-        return (LocationPath) Parser.parseExpression(xpath, COMPILER);
-    }
-
-
 }

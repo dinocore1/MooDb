@@ -1,5 +1,8 @@
-package com.devsmart.moodb.query.parser;
+package com.devsmart.moodb.objectquery;
 
+
+import com.devsmart.moodb.objects.DBCollection;
+import com.devsmart.moodb.objects.DBElement;
 
 import java.util.Arrays;
 import java.util.Collection;
@@ -21,14 +24,12 @@ public class Step implements ObjectOperation {
         mNextStep = step;
     }
 
-    public Object eval(Object input) {
+    public DBElement eval(DBElement input) {
 
-        Object retval = null;
+        DBElement retval = null;
         if(input != null) {
-            if(input instanceof Collection) {
-                retval = evalCollection((Collection) input);
-            } else if(input.getClass().isArray()) {
-                retval = evalCollection(Arrays.asList(input));
+            if(input.isCollection()) {
+                retval = evalCollection(input.getAsCollection());
             } else {
                 retval = evalOne(input);
             }
@@ -41,9 +42,9 @@ public class Step implements ObjectOperation {
         return retval;
     }
 
-    private Object evalCollection(Collection input) {
-        LinkedList<Object> retval = new LinkedList<Object>();
-        for(Object obj : input) {
+    private DBElement evalCollection(DBCollection input) {
+        LinkedList<DBElement> retval = new LinkedList<DBElement>();
+        for(DBElement obj : input) {
             obj = evalOne(obj);
             if(obj != null){
                 retval.add(obj);
@@ -55,11 +56,11 @@ public class Step implements ObjectOperation {
         } if(retval.size() == 1){
             return retval.getFirst();
         } else {
-            return retval;
+            return DBCollection.wrap(retval);
         }
     }
 
-    private Object evalOne(Object input) {
+    private DBElement evalOne(DBElement input) {
         if(mPredicate != null) {
             if(mPredicate.matches(input)){
                 return mOperation.eval(input);

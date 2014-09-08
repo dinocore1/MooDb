@@ -1,5 +1,8 @@
-package com.devsmart.moodb.query.parser;
+package com.devsmart.moodb.objectquery;
 
+
+import com.devsmart.moodb.objects.DBElement;
+import com.devsmart.moodb.objects.DBPrimitive;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -21,18 +24,26 @@ public class ComparatorPredicate implements Predicate {
     }
 
     @Override
-    public boolean matches(Object input) {
-        Object obj = mLeftOp.eval(input);
+    public boolean matches(DBElement input) {
+        DBElement obj = mLeftOp.eval(input);
         if(obj == null) {
             return false;
         }
 
-        if(obj instanceof String) {
-            return compare(((String) obj).compareTo(mValue));
-        } else if(obj instanceof Number) {
-            return compare(new BigDecimal(((Number) obj).doubleValue()).compareTo(new BigDecimal(mValue)));
+        if(obj.isPrimitive()){
+            DBPrimitive primitive = obj.getAsPrimitive();
+            if(primitive.isString()) {
+                return compare(primitive.getAsString().compareTo(mValue));
+            } else if(primitive.isNumber()){
+                return compare(Double.compare(primitive.getAsDouble(), Double.parseDouble(mValue)));
+            } else if(primitive.isBoolean()) {
+                return compare(Boolean.compare(primitive.getAsBoolean(), Boolean.parseBoolean(mValue)));
+            } else {
+                logger.error("wtf");
+                return false;
+            }
         } else {
-            logger.warn("no comparator for class: {} {}", obj.getClass().getName(), obj);
+            logger.warn("no comparator for obj: {}", obj);
             return false;
         }
     }

@@ -1,4 +1,4 @@
-package com.devsmart.moodb.query;
+package com.devsmart.moodb.cursor;
 
 import com.devsmart.moodb.MooDB;
 import com.devsmart.moodb.MooDBCursor;

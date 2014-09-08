@@ -1,4 +1,4 @@
-package com.devsmart.moodb.query.parser;
+package com.devsmart.moodb.objectquery;
 
 import com.devsmart.moodb.MooDBBaseVisitor;
 import com.devsmart.moodb.MooDBLexer;
@@ -94,6 +94,25 @@ public class QueryBuilder extends MooDBBaseVisitor<Void> {
 
         Predicate predicate = new ComparatorPredicate(leftOp, rightStr, ctx.o.getText());
         prop.put(ctx, predicate);
+        return null;
+    }
+
+    @Override
+    public Void visitAndExpr(@NotNull MooDBParser.AndExprContext ctx) {
+
+        visit(ctx.l);
+        visit(ctx.r);
+
+        prop.put(ctx, new AndPredicate((Predicate)prop.get(ctx.l), (Predicate)prop.get(ctx.r)));
+        return null;
+    }
+
+    @Override
+    public Void visitOrExpr(@NotNull MooDBParser.OrExprContext ctx) {
+        visit(ctx.l);
+        visit(ctx.r);
+
+        prop.put(ctx, new OrPredicate((Predicate)prop.get(ctx.l), (Predicate)prop.get(ctx.r)));
         return null;
     }
 

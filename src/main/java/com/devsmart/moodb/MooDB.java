@@ -1,18 +1,22 @@
 package com.devsmart.moodb;
 
 
-import com.devsmart.moodb.query.QueryEvalNode;
+import com.devsmart.moodb.cursor.CursorBuilder;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
-import com.sleepycat.je.*;
 import com.sleepycat.je.Cursor;
-import org.apache.commons.jxpath.JXPathContext;
-import org.apache.commons.jxpath.ri.compiler.LocationPath;
+import com.sleepycat.je.Database;
+import com.sleepycat.je.DatabaseConfig;
+import com.sleepycat.je.DatabaseEntry;
+import com.sleepycat.je.Environment;
+import com.sleepycat.je.EnvironmentConfig;
+import com.sleepycat.je.LockMode;
+import com.sleepycat.je.OperationStatus;
+import com.sleepycat.je.SecondaryConfig;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.HashMap;
+import java.util.TreeSet;
 import java.util.UUID;
 
 public class MooDB {
@@ -21,17 +25,10 @@ public class MooDB {
     private static final String DBNAME_VIEWS = "views";
     private Environment mDBEnv;
 
-    private class ViewObj {
-        View view;
-        String name;
-        SecondaryDatabase indexDB;
-        public String indexXPath;
-    }
-
     private final File mDBRoot;
     private Database mObjectsDB;
     private Database mViewsDB;
-    private HashMap<String, ViewObj> mViews = new HashMap<String, ViewObj>();
+    private TreeSet<Index> mIndexes = new TreeSet<Index>();
     protected Gson gson = new GsonBuilder().create();
 
     public static MooDB openDatabase(File dbRoot) throws IOException {
@@ -106,10 +103,10 @@ public class MooDB {
     }
 
     public <T> T getOne(String xpath, Class<T> classType) {
-        XPathCursor cursor = query(xpath);
+        MooDBCursor cursor = query(xpath);
         try {
             if (cursor.moveToNext()) {
-                return (T) cursor.getObj();
+                return get(cursor.objectId(), classType);
             } else {
                 return null;
             }
@@ -130,71 +127,48 @@ public class MooDB {
             DatabaseEntry key = new DatabaseEntry();
             DatabaseEntry value = new DatabaseEntry();
             while(cursor.getNext(key, value, LockMode.DEFAULT) == OperationStatus.SUCCESS){
-                String name = Utils.toString(key);
-                String xpath = Utils.toString(value);
-                addView(name, xpath);
+                String indexQuery = Utils.toString(key);
+                loadIndex(indexQuery);
             }
         } finally {
             cursor.close();
         }
     }
 
-    protected View addView(String name, String xpath) {
-        ViewObj obj = new ViewObj();
-        obj.name = name;
-        obj.indexXPath = xpath;
-        obj.view = new View(this, JXPathContext.compile(xpath));
+    protected Index loadIndex(String indexQuery) {
+        Index index = new Index(indexQuery);
+        if(!mIndexes.contains(index)) {
+            SecondaryConfig config = new SecondaryConfig();
+            config.setAllowCreate(true);
+            config.setAllowPopulate(true);
+            config.setMultiKeyCreator(index);
+            config.setSortedDuplicates(true);
+            index.indexDB = mDBEnv.openSecondaryDatabase(null, indexQuery, mObjectsDB, config);
 
-        SecondaryConfig config = new SecondaryConfig();
-        config.setAllowCreate(true);
-        config.setAllowPopulate(true);
-        config.setKeyCreator(obj.view);
-        config.setSortedDuplicates(true);
-        obj.indexDB = mDBEnv.openSecondaryDatabase(null, name, mObjectsDB, config);
-        obj.view.mIndexDB = obj.indexDB;
-
-        mViews.put(name, obj);
-        return obj.view;
+            mIndexes.add(index);
+            return index;
+        } else {
+            return mIndexes.floor(index);
+        }
     }
 
-    public XPathCursor query(String xpath) {
-
-        LocationPath compiledQuery = Utils.compileXPath(xpath);
-        ArrayList<LocationPath> indexes = new ArrayList<LocationPath>(mViews.size());
-        for(ViewObj view : mViews.values()){
-            indexes.add(Utils.compileXPath(view.indexXPath));
-        }
-        IndexChooser indexChooser = new IndexChooser(compiledQuery, indexes);
-        QueryEvalNode executionPlan = indexChooser.generateExecutionPlan();
-        MooDBCursor cursor = executionPlan.createCursor(this);
-        return new XPathCursor(this, cursor, JXPathContext.compile(xpath));
-
-
-
-        //Cursor cursor = mObjectsDB.openCursor(null, null);
-        //XPathCursor retval = new XPathCursor(this, cursor, JXPathContext.compile(xpath));
-        //return retval;
+    public MooDBCursor query(String xpath) {
+        MooDBCursor cursor = CursorBuilder.query(this, xpath);
+        return cursor;
     }
 
-    public View getIndex(String xpath) {
-        View retval = null;
-        for(ViewObj viewObj : mViews.values()){
-            if(viewObj.indexXPath.equals(xpath)){
-                retval = viewObj.view;
-                break;
-            }
-        }
-        if(retval == null) {
-            retval = addView(xpath, xpath);
-        }
-        return retval;
+    public Index getIndex(String indexQuery) {
+        return mIndexes.floor(new Index(indexQuery));
+    }
+
+    public void ensureIndex(String indexQuery) {
+        loadIndex(indexQuery);
     }
 
     public void close() {
-        for(ViewObj index : mViews.values()){
+        for(Index index : mIndexes){
             index.indexDB.close();
         }
-
         mViewsDB.close();
         mObjectsDB.close();
         mDBEnv.close();

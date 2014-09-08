@@ -64,7 +64,7 @@ public class IndexTest {
     @Test
     public void testQuery() throws Exception {
 
-        View view = mMooDB.addView("typeview", "type");
+        mMooDB.loadIndex("type");
 
         for(int i=0;i<5;i++){
             mMooDB.insert(createWidget("car", i));
@@ -80,40 +80,21 @@ public class IndexTest {
         ArrayList<String> queryResult = new ArrayList<String>();
         {
             Stopwatch stopwatch = Stopwatch.createStarted();
-            XPathCursor cursor = mMooDB.query(".[type='car']/id");
+            MooDBCursor cursor = mMooDB.query("[type='car']/id");
+            int carCount = 0;
             while (cursor.moveToNext()) {
-                Object value = cursor.getObj();
-                System.out.println("got value: " + value);
-                queryResult.add((String)value);
+                carCount++;
+                //Object value = cursor.getObj();
+                //System.out.println("got value: " + value);
+                //queryResult.add((String)value);
             }
             stopwatch.stop();
             cursor.close();
-            System.out.println(String.format("%d query took %s", 1000000, stopwatch));
-            queryTime = stopwatch.elapsed(TimeUnit.MILLISECONDS);
+            System.out.println(String.format("query took %s", stopwatch));
+            assertEquals(5, carCount);
+            assertTrue(stopwatch.elapsed(TimeUnit.MILLISECONDS) < 100);
+
         }
-
-        long viewTime;
-        ArrayList<String> viewResult = new ArrayList<String>();
-        {
-            Stopwatch stopwatch = Stopwatch.createStarted();
-            XPathCursor cursor = view.query(".[type='car']/id");
-            while (cursor.moveToNext()) {
-                Object value = cursor.getObj();
-                System.out.println("got value: " + value);
-                viewResult.add((String)value);
-            }
-            stopwatch.stop();
-            cursor.close();
-            System.out.println(String.format("%d view query took %s", 1000000, stopwatch));
-            viewTime = stopwatch.elapsed(TimeUnit.MILLISECONDS);
-        }
-
-        Collections.sort(queryResult);
-        Collections.sort(viewResult);
-        assertArrayEquals("", queryResult.toArray(new String[1]), viewResult.toArray(new String[1]));
-
-        assertTrue(queryTime < viewTime);
-
 
     }
 
