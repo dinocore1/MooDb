@@ -37,7 +37,7 @@ public class ComparatorPredicate implements Predicate {
             } else if(primitive.isNumber()){
                 return compare(Double.compare(primitive.getAsDouble(), Double.parseDouble(mValue)));
             } else if(primitive.isBoolean()) {
-                return compare(Boolean.compare(primitive.getAsBoolean(), Boolean.parseBoolean(mValue)));
+                return compare(primitive.getAsBoolean() == Boolean.parseBoolean(mValue) ? 0 : 1);
             } else {
                 logger.error("wtf");
                 return false;
