@@ -21,7 +21,7 @@ public class QueryBuilder extends MooDBBaseVisitor<Void> {
         return builder.query;
     }
 
-    ParseTreeProperty<Object> prop = new ParseTreeProperty<Object>();
+    public ParseTreeProperty<Object> prop = new ParseTreeProperty<Object>();
     public ObjectOperation query;
 
     @Override

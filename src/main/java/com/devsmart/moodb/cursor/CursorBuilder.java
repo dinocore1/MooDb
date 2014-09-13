@@ -8,10 +8,13 @@ import com.devsmart.moodb.MooDBCursor;
 import com.devsmart.moodb.MooDBLexer;
 import com.devsmart.moodb.MooDBParser;
 import com.devsmart.moodb.Utils;
+import com.devsmart.moodb.objectquery.Predicate;
+import com.devsmart.moodb.objectquery.QueryBuilder;
 import com.google.common.base.Joiner;
 import com.sleepycat.bind.tuple.SortedDoubleBinding;
 import com.sleepycat.je.DatabaseEntry;
 
+import com.sleepycat.util.keyrange.RangeCursor;
 import org.antlr.v4.runtime.ANTLRInputStream;
 import org.antlr.v4.runtime.CommonTokenStream;
 import org.antlr.v4.runtime.misc.NotNull;
@@ -22,16 +25,17 @@ import java.util.LinkedList;
 import java.util.Stack;
 import java.util.regex.Pattern;
 
-public class CursorBuilder extends MooDBBaseVisitor<MooDBCursor> {
+public class CursorBuilder extends MooDBBaseVisitor<Void> {
 
 
 
-    public static MooDBCursor query(MooDB db, String query) {
+    public static void query(MooDB db, String query) {
         MooDBLexer lexer = new MooDBLexer(new ANTLRInputStream(query));
         MooDBParser parser = new MooDBParser(new CommonTokenStream(lexer));
         MooDBParser.EvaluationContext tree = parser.evaluation();
         CursorBuilder builder = new CursorBuilder(db);
-        return builder.visit(tree);
+        builder.visit(tree);
+
     }
 
 
@@ -61,7 +65,7 @@ public class CursorBuilder extends MooDBBaseVisitor<MooDBCursor> {
 
 
     @Override
-    public MooDBCursor visitEvaluation(@NotNull MooDBParser.EvaluationContext ctx) {
+    public Void visitEvaluation(@NotNull MooDBParser.EvaluationContext ctx) {
 
         MooDBParser.PredicateContext predicate = ctx.predicate();
         if(predicate != null){
@@ -80,12 +84,15 @@ public class CursorBuilder extends MooDBBaseVisitor<MooDBCursor> {
     }
 
     @Override
-    public MooDBCursor visitPredicate(@NotNull MooDBParser.PredicateContext ctx) {
-        return visit(ctx.expr());
+    public Void visitPredicate(@NotNull MooDBParser.PredicateContext ctx) {
+        MooDBParser.ExprContext u = ctx.expr();
+        visit(u);
+        prop.put(ctx, prop.get(u));
+        return null;
     }
 
     @Override
-    public MooDBCursor visitEvalExpr(@NotNull MooDBParser.EvalExprContext ctx) {
+    public Void visitEvalExpr(@NotNull MooDBParser.EvalExprContext ctx) {
 
         visit(ctx.l);
         final String nodeName = (String) prop.get(ctx.l);
@@ -93,36 +100,82 @@ public class CursorBuilder extends MooDBBaseVisitor<MooDBCursor> {
         visit(ctx.r);
         final String value = (String) prop.get(ctx.r);
 
+        mSteps.push(nodeName);
+        String indexQuery = Joiner.on("/").join(mSteps);
+        mSteps.pop();
+        Index index = mDb.getIndex(indexQuery);
+
         MooDBCursor retval = null;
 
         final String op = ctx.o.getText();
         if("=".equals(op)) {
-            mSteps.push(nodeName);
-            String indexQuery = Joiner.on("/").join(mSteps);
-            mSteps.pop();
-            Index index = mDb.getIndex(indexQuery);
             if(index != null){
                 retval = new IndexEqualCursor(index.getIndexDB().openCursor(null, null), guessDataValue(value));
             }
+        } else if(">=".equals(op)) {
+            if(index != null){
+                retval = new IndexGreaterThanCursor(index.getIndexDB().openCursor(null, null), guessDataValue(value), true);
+            }
+        } else if(">".equals(op)){
+            if(index != null){
+                retval = new IndexGreaterThanCursor(index.getIndexDB().openCursor(null, null), guessDataValue(value), false);
+            }
+        } else if("<=".equals(op)){
+            if(index != null){
+                retval = new IndexLessThanCursor(index.getIndexDB().openCursor(null, null), guessDataValue(value), true);
+            }
+        } else if("<".equals(op)) {
+            if(index != null){
+                retval = new IndexLessThanCursor(index.getIndexDB().openCursor(null, null), guessDataValue(value), false);
+            }
         }
 
+        if(retval == null) {
+            retval = new AllObjectsCursor(mDb.openObjectsCursor(null, null));
+        }
 
-
-
-
-        return retval;
+        prop.put(ctx, retval);
+        return null;
     }
 
+    @Override
+    public Void visitAndExpr(@NotNull MooDBParser.AndExprContext ctx) {
+        visit(ctx.l);
+        MooDBCursor cursor = (MooDBCursor)prop.get(ctx.l);
 
+        QueryBuilder queryBuilder = new QueryBuilder();
+        queryBuilder.visit(ctx.r);
+        Predicate predicate = (Predicate) queryBuilder.prop.get(ctx.r);
+
+        MooDBCursor retval = new PredicateAndCursor(cursor, predicate);
+        prop.put(ctx, retval);
+
+        return null;
+    }
 
     @Override
-    public MooDBCursor visitExprId(@NotNull MooDBParser.ExprIdContext ctx) {
+    public Void visitOrExpr(@NotNull MooDBParser.OrExprContext ctx) {
+        visit(ctx.l);
+        MooDBCursor cursor = (MooDBCursor)prop.get(ctx.l);
+
+        QueryBuilder queryBuilder = new QueryBuilder();
+        queryBuilder.visit(ctx.r);
+        Predicate predicate = (Predicate) queryBuilder.prop.get(ctx.r);
+
+        MooDBCursor retval = new PredicateOrCursor(cursor, predicate);
+        prop.put(ctx, retval);
+
+        return null;
+    }
+
+    @Override
+    public Void visitExprId(@NotNull MooDBParser.ExprIdContext ctx) {
         prop.put(ctx, ctx.getText());
         return null;
     }
 
     @Override
-    public MooDBCursor visitExprStrLit(@NotNull MooDBParser.ExprStrLitContext ctx) {
+    public Void visitExprStrLit(@NotNull MooDBParser.ExprStrLitContext ctx) {
         String str = ctx.getText();
         str = str.substring(1, str.length()-1);
         prop.put(ctx, str);

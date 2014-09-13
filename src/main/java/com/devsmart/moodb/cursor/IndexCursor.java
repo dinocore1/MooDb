@@ -11,6 +11,11 @@ import org.slf4j.LoggerFactory;
 
 public class IndexCursor implements MooDBCursor {
 
+    public static enum Direction {
+        ASC,
+        DESC
+    }
+
     Logger logger = LoggerFactory.getLogger(IndexCursor.class);
 
     private SecondaryCursor mStartCursor;
@@ -19,12 +24,8 @@ public class IndexCursor implements MooDBCursor {
     private long mLocation = BEFORE_FIRST;
     private DatabaseEntry data = new DatabaseEntry();
 
-    public IndexCursor(SecondaryCursor cursor) {
-        mIndexCursor = cursor;
-        mStartCursor = cursor.dup(true);
-    }
 
-    public IndexCursor(SecondaryCursor cursor, byte[] key) {
+    public IndexCursor(SecondaryCursor cursor, byte[] key, ) {
         mIndexCursor = cursor;
 
         OperationStatus status = mIndexCursor.getSearchKey(new DatabaseEntry(mKey), data, LockMode.DEFAULT);

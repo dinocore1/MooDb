@@ -4,15 +4,7 @@ package com.devsmart.moodb;
 import com.devsmart.moodb.cursor.CursorBuilder;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
-import com.sleepycat.je.Cursor;
-import com.sleepycat.je.Database;
-import com.sleepycat.je.DatabaseConfig;
-import com.sleepycat.je.DatabaseEntry;
-import com.sleepycat.je.Environment;
-import com.sleepycat.je.EnvironmentConfig;
-import com.sleepycat.je.LockMode;
-import com.sleepycat.je.OperationStatus;
-import com.sleepycat.je.SecondaryConfig;
+import com.sleepycat.je.*;
 
 import java.io.File;
 import java.io.IOException;
@@ -172,6 +164,10 @@ public class MooDB {
         mViewsDB.close();
         mObjectsDB.close();
         mDBEnv.close();
+    }
+
+    public Cursor openObjectsCursor(Transaction txn, CursorConfig config) {
+        return mObjectsDB.openCursor(txn, config);
     }
 
 
