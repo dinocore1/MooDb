@@ -21,20 +21,17 @@ public class IndexCursor implements MooDBCursor {
     private SecondaryCursor mStartCursor;
     private SecondaryCursor mIndexCursor;
     private byte[] mKey;
+    private final Direction mDirection;
     private long mLocation = BEFORE_FIRST;
     private DatabaseEntry data = new DatabaseEntry();
 
 
-    public IndexCursor(SecondaryCursor cursor, byte[] key, ) {
+    public IndexCursor(SecondaryCursor cursor, byte[] key, Direction direction) {
         mIndexCursor = cursor;
+        mDirection = direction;
 
-        OperationStatus status = mIndexCursor.getSearchKey(new DatabaseEntry(mKey), data, LockMode.DEFAULT);
-        if(status != OperationStatus.SUCCESS){
-            String errorStr = String.format("error searching for key: %s", status);
-            logger.error(errorStr);
-            throw new RuntimeException(errorStr);
-        }
-
+        mIndexCursor.getSearchKeyRange(new DatabaseEntry(mKey), data, LockMode.DEFAULT);
+        mLocation = 0;
         mStartCursor = mIndexCursor.dup(true);
         mKey = key;
     }
@@ -49,12 +46,16 @@ public class IndexCursor implements MooDBCursor {
 
     @Override
     public boolean moveToNext() {
-        if(mLocation == AFTER_LAST){
+        if (mLocation == AFTER_LAST) {
             return false;
         }
         DatabaseEntry key = new DatabaseEntry();
         boolean success;
-        success = mIndexCursor.getNext(key, data, LockMode.DEFAULT) == OperationStatus.SUCCESS;
+        if (mDirection == Direction.DESC){
+            success = mIndexCursor.getNextDup(key, data, LockMode.DEFAULT) == OperationStatus.SUCCESS;
+        } else {
+            success = mIndexCursor.getPrevDup(key, data, LockMode.DEFAULT) == OperationStatus.SUCCESS;
+        }
         if(success){
             mLocation++;
         }
@@ -68,7 +69,11 @@ public class IndexCursor implements MooDBCursor {
         }
         DatabaseEntry key = new DatabaseEntry();
         boolean success;
-        success = mIndexCursor.getPrev(key, data, LockMode.DEFAULT) == OperationStatus.SUCCESS;
+        if(mDirection == Direction.DESC) {
+            success = mIndexCursor.getPrevDup(key, data, LockMode.DEFAULT) == OperationStatus.SUCCESS;
+        } else {
+            success = mIndexCursor.getNextDup(key, data, LockMode.DEFAULT) == OperationStatus.SUCCESS;
+        }
         if(success){
             mLocation--;
         }

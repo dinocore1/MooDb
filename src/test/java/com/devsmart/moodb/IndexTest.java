@@ -76,24 +76,49 @@ public class IndexTest {
             mMooDB.insert(createWidget("train", i));
         }
 
-        long queryTime;
-        ArrayList<String> queryResult = new ArrayList<String>();
         {
-            Stopwatch stopwatch = Stopwatch.createStarted();
-            MooDBCursor cursor = mMooDB.query("[type='car']/id");
             int carCount = 0;
-            while (cursor.moveToNext()) {
-                carCount++;
-                //Object value = cursor.getObj();
-                //System.out.println("got value: " + value);
-                //queryResult.add((String)value);
+            Stopwatch stopwatch = Stopwatch.createStarted();
+            MooDBCursor cursor = mMooDB.query("[type='car']");
+            try {
+                while (cursor.moveToNext()) {
+                    carCount++;
+                    //Object value = cursor.getObj();
+                    //System.out.println("got value: " + value);
+                    //queryResult.add((String)value);
+                }
+                stopwatch.stop();
+            } finally {
+                cursor.close();
             }
-            stopwatch.stop();
-            cursor.close();
             System.out.println(String.format("query took %s", stopwatch));
             assertEquals(5, carCount);
-            assertTrue(stopwatch.elapsed(TimeUnit.MILLISECONDS) < 100);
+            //assertTrue(stopwatch.elapsed(TimeUnit.MILLISECONDS) < 100);
 
+        }
+
+        {
+            MooDBCursor cursor = mMooDB.query("[type='car' and value>=3]");
+            try {
+                while(cursor.moveToNext()){
+                    String dataStr = Utils.toString(cursor.getData());
+                    System.out.println(dataStr);
+                }
+            } finally {
+                cursor.close();
+            }
+        }
+
+        {
+            MooDBCursor cursor = mMooDB.query("[value>=3 and type='car']");
+            try {
+                while(cursor.moveToNext()){
+                    String dataStr = Utils.toString(cursor.getData());
+                    System.out.println(dataStr);
+                }
+            } finally {
+                cursor.close();
+            }
         }
 
     }

@@ -9,6 +9,8 @@ import com.sleepycat.je.SecondaryCursor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.Arrays;
+
 
 public class IndexEqualCursor implements MooDBCursor {
 
@@ -18,14 +20,16 @@ public class IndexEqualCursor implements MooDBCursor {
     private SecondaryCursor mStartCursor;
     private SecondaryCursor mIndexCursor;
     private long mLocation = BEFORE_FIRST;
-    private final DatabaseEntry key;
+    private final byte[] mKeyData;
     private DatabaseEntry data = new DatabaseEntry();
+    private DatabaseEntry key = new DatabaseEntry();
     private DatabaseEntry pkey = new DatabaseEntry();
 
-    public IndexEqualCursor(SecondaryCursor cursor, DatabaseEntry key) {
-        this.key = key;
+    public IndexEqualCursor(SecondaryCursor cursor, byte[] keydata) {
+        mKeyData = keydata;
         mIndexCursor = cursor;
 
+        key.setData(mKeyData);
         mStatus = mIndexCursor.getSearchKey(key, pkey, data, LockMode.DEFAULT);
         if(mStatus == OperationStatus.SUCCESS){
             mStartCursor = mIndexCursor.dup(true);
@@ -54,6 +58,10 @@ public class IndexEqualCursor implements MooDBCursor {
             return false;
         }
         boolean success = mIndexCursor.getNextDup(key, pkey, data, LockMode.DEFAULT) == OperationStatus.SUCCESS;
+        if(!Arrays.equals(key.getData(), mKeyData)){
+            success = false;
+            mLocation = AFTER_LAST;
+        }
         if(success){
             mLocation++;
         }
@@ -69,6 +77,10 @@ public class IndexEqualCursor implements MooDBCursor {
             return false;
         }
         boolean success = mIndexCursor.getPrevDup(key, pkey, data, LockMode.DEFAULT) == OperationStatus.SUCCESS;
+        if(!Arrays.equals(key.getData(), mKeyData)){
+            success = false;
+            mLocation = BEFORE_FIRST;
+        }
 
         if(success){
             mLocation--;

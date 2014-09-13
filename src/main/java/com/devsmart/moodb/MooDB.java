@@ -150,7 +150,12 @@ public class MooDB {
     }
 
     public Index getIndex(String indexQuery) {
-        return mIndexes.floor(new Index(indexQuery));
+        Index retval =  mIndexes.floor(new Index(indexQuery));
+        if(retval.indexQuery.equals(indexQuery)){
+            return retval;
+        } else {
+            return null;
+        }
     }
 
     public void ensureIndex(String indexQuery) {

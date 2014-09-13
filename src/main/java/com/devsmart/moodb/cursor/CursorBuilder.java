@@ -14,6 +14,7 @@ import com.google.common.base.Joiner;
 import com.sleepycat.bind.tuple.SortedDoubleBinding;
 import com.sleepycat.je.DatabaseEntry;
 
+import com.sleepycat.je.DiskOrderedCursorConfig;
 import com.sleepycat.util.keyrange.RangeCursor;
 import org.antlr.v4.runtime.ANTLRInputStream;
 import org.antlr.v4.runtime.CommonTokenStream;
@@ -29,13 +30,14 @@ public class CursorBuilder extends MooDBBaseVisitor<Void> {
 
 
 
-    public static void query(MooDB db, String query) {
+    public static MooDBCursor query(MooDB db, String query) {
         MooDBLexer lexer = new MooDBLexer(new ANTLRInputStream(query));
         MooDBParser parser = new MooDBParser(new CommonTokenStream(lexer));
         MooDBParser.EvaluationContext tree = parser.evaluation();
         CursorBuilder builder = new CursorBuilder(db);
         builder.visit(tree);
 
+        return (MooDBCursor) builder.prop.get(tree);
     }
 
 
@@ -47,19 +49,15 @@ public class CursorBuilder extends MooDBBaseVisitor<Void> {
         mDb = db;
     }
 
-    private DatabaseEntry guessDataValue(String value) {
-        DatabaseEntry retval = null;
+    private byte[] guessDataValue(String value) {
         try {
             double numValue = Double.parseDouble(value);
-            retval = new DatabaseEntry();
-            SortedDoubleBinding.doubleToEntry(numValue, retval);
+            DatabaseEntry entry = new DatabaseEntry();
+            SortedDoubleBinding.doubleToEntry(numValue, entry);
+            return entry.getData();
         } catch (NumberFormatException e) {}
 
-        if(retval == null) {
-            retval = new DatabaseEntry(Utils.toBytes(value));
-        }
-
-        return retval;
+        return Utils.toBytes(value);
     }
 
 
@@ -67,18 +65,15 @@ public class CursorBuilder extends MooDBBaseVisitor<Void> {
     @Override
     public Void visitEvaluation(@NotNull MooDBParser.EvaluationContext ctx) {
 
+        MooDBCursor cursor = null;
         MooDBParser.PredicateContext predicate = ctx.predicate();
         if(predicate != null){
             visit(predicate);
+            cursor = (MooDBCursor) prop.get(predicate);
         }
 
-        TerminalNode nodeName = ctx.ID();
-        if(nodeName != null){
-            mSteps.push(nodeName.getText());
-        } else {
-            mSteps.push(".");
-        }
 
+        prop.put(ctx, cursor);
 
         return null;
     }
@@ -112,21 +107,13 @@ public class CursorBuilder extends MooDBBaseVisitor<Void> {
             if(index != null){
                 retval = new IndexEqualCursor(index.getIndexDB().openCursor(null, null), guessDataValue(value));
             }
-        } else if(">=".equals(op)) {
+        } else if(">=".equals(op) || ">".equals(op)) {
             if(index != null){
-                retval = new IndexGreaterThanCursor(index.getIndexDB().openCursor(null, null), guessDataValue(value), true);
+                retval = new IndexCursor(index.getIndexDB().openCursor(null, null), guessDataValue(value), IndexCursor.Direction.ASC);
             }
-        } else if(">".equals(op)){
+        } else if("<=".equals(op) || "<".equals(op)){
             if(index != null){
-                retval = new IndexGreaterThanCursor(index.getIndexDB().openCursor(null, null), guessDataValue(value), false);
-            }
-        } else if("<=".equals(op)){
-            if(index != null){
-                retval = new IndexLessThanCursor(index.getIndexDB().openCursor(null, null), guessDataValue(value), true);
-            }
-        } else if("<".equals(op)) {
-            if(index != null){
-                retval = new IndexLessThanCursor(index.getIndexDB().openCursor(null, null), guessDataValue(value), false);
+                retval = new IndexCursor(index.getIndexDB().openCursor(null, null), guessDataValue(value), IndexCursor.Direction.ASC);
             }
         }
 
@@ -155,6 +142,7 @@ public class CursorBuilder extends MooDBBaseVisitor<Void> {
 
     @Override
     public Void visitOrExpr(@NotNull MooDBParser.OrExprContext ctx) {
+        /*
         visit(ctx.l);
         MooDBCursor cursor = (MooDBCursor)prop.get(ctx.l);
 
@@ -164,6 +152,7 @@ public class CursorBuilder extends MooDBBaseVisitor<Void> {
 
         MooDBCursor retval = new PredicateOrCursor(cursor, predicate);
         prop.put(ctx, retval);
+        */
 
         return null;
     }
