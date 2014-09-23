@@ -8,7 +8,7 @@ import com.sleepycat.je.DatabaseEntry;
 import com.sleepycat.je.LockMode;
 import com.sleepycat.je.OperationStatus;
 
-public class AllObjectsCursor implements MooDBCursor {
+public class AllObjectsCursor implements CountEstimateCursor {
 
     private Cursor mCursor;
     private Cursor mDup;
@@ -57,5 +57,10 @@ public class AllObjectsCursor implements MooDBCursor {
         if(mCursor != null) {
             mCursor.close();
         }
+    }
+
+    @Override
+    public long getCountEstimate() {
+        return Long.MAX_VALUE;
     }
 }

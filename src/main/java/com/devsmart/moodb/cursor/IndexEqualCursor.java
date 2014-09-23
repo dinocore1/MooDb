@@ -5,6 +5,7 @@ import com.devsmart.moodb.Utils;
 import com.sleepycat.je.DatabaseEntry;
 import com.sleepycat.je.LockMode;
 import com.sleepycat.je.OperationStatus;
+import com.sleepycat.je.RangeCursor;
 import com.sleepycat.je.SecondaryCursor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -12,7 +13,7 @@ import org.slf4j.LoggerFactory;
 import java.util.Arrays;
 
 
-public class IndexEqualCursor implements MooDBCursor {
+public class IndexEqualCursor implements CountEstimateCursor {
 
     private final OperationStatus mStatus;
     Logger logger = LoggerFactory.getLogger(IndexEqualCursor.class);
@@ -104,5 +105,11 @@ public class IndexEqualCursor implements MooDBCursor {
             mStartCursor.close();
         }
         mIndexCursor.close();
+    }
+
+    @Override
+    public long getCountEstimate() {
+        long value = mIndexCursor.countEstimate();
+        return value;
     }
 }

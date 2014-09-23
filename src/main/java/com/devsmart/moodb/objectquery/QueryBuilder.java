@@ -126,6 +126,7 @@ public class QueryBuilder extends MooDBBaseVisitor<Void> {
     public Void visitExprStrLit(@NotNull MooDBParser.ExprStrLitContext ctx) {
         String str = ctx.getText();
         str = str.substring(1, str.length()-1);
+        str = str.replaceAll("\\\\'", "");
         prop.put(ctx, str);
         return null;
     }

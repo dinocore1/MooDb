@@ -1,19 +1,22 @@
 package com.devsmart.moodb.cursor;
 
+
 import com.devsmart.moodb.Utils;
-import com.devsmart.moodb.objectquery.Predicate;
+import com.devsmart.moodb.objectquery.ObjectOperation;
 import com.devsmart.moodb.objects.DBElement;
 
-public class PredicateAndCursor implements CountEstimateCursor {
+public class ObjectOperationCursor implements CountEstimateCursor {
 
     private final CountEstimateCursor mCursor;
-    private final Predicate mPredicate;
+    private final ObjectOperation mOperation;
+    private DBElement mObj;
     private byte[] mData;
 
-    public PredicateAndCursor(CountEstimateCursor cursor, Predicate predicate) {
+    public ObjectOperationCursor(CountEstimateCursor cursor, ObjectOperation operation) {
         mCursor = cursor;
-        mPredicate = predicate;
+        mOperation = operation;
     }
+
 
     @Override
     public void reset() {
@@ -22,30 +25,24 @@ public class PredicateAndCursor implements CountEstimateCursor {
 
     @Override
     public boolean moveToNext() {
-        boolean retval = false;
-        while(mCursor.moveToNext()){
+        if(mCursor.moveToNext()){
             mData = mCursor.getData();
-            DBElement element = Utils.toDBElement(mData);
-            if(mPredicate.matches(element)){
-                retval = true;
-                break;
-            }
+            mObj = mOperation.eval(Utils.toDBElement(mData));
+            return true;
+        } else {
+            return false;
         }
-        return retval;
     }
 
     @Override
     public boolean moveToPrevious() {
-        boolean retval = false;
-        while(mCursor.moveToPrevious()){
+        if(mCursor.moveToPrevious()){
             mData = mCursor.getData();
-            DBElement element = Utils.toDBElement(mData);
-            if(mPredicate.matches(element)){
-                retval = true;
-                break;
-            }
+            mObj = mOperation.eval(Utils.toDBElement(mData));
+            return true;
+        } else {
+            return false;
         }
-        return retval;
     }
 
     @Override

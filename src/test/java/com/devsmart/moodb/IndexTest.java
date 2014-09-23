@@ -98,6 +98,7 @@ public class IndexTest {
         }
 
         {
+            Stopwatch stopwatch = Stopwatch.createStarted();
             MooDBCursor cursor = mMooDB.query("[type='car' and value>=3]");
             try {
                 while(cursor.moveToNext()){
@@ -107,9 +108,11 @@ public class IndexTest {
             } finally {
                 cursor.close();
             }
+            System.out.println(String.format("query took %s", stopwatch));
         }
 
         {
+            Stopwatch stopwatch = Stopwatch.createStarted();
             MooDBCursor cursor = mMooDB.query("[value>=3 and type='car']");
             try {
                 while(cursor.moveToNext()){
@@ -119,6 +122,36 @@ public class IndexTest {
             } finally {
                 cursor.close();
             }
+            System.out.println(String.format("query took %s", stopwatch));
+        }
+
+        {
+            mMooDB.loadIndex("value");
+            Stopwatch stopwatch = Stopwatch.createStarted();
+            MooDBCursor cursor = mMooDB.query("[value<=40 and type='car']");
+            try {
+                while(cursor.moveToNext()){
+                    String dataStr = Utils.toString(cursor.getData());
+                    System.out.println(dataStr);
+                }
+            } finally {
+                cursor.close();
+            }
+            System.out.println(String.format("query took %s", stopwatch));
+        }
+
+        {
+            Stopwatch stopwatch = Stopwatch.createStarted();
+            MooDBCursor cursor = mMooDB.query("[value<=40]");
+            try {
+                while(cursor.moveToNext()){
+                    String dataStr = Utils.toString(cursor.getData());
+                    System.out.println(dataStr);
+                }
+            } finally {
+                cursor.close();
+            }
+            System.out.println(String.format("query took %s", stopwatch));
         }
 
     }
