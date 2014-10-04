@@ -3,6 +3,8 @@ package com.devsmart.moodb;
 
 import com.devsmart.moodb.cursor.CursorBuilder;
 import com.devsmart.moodb.cursor.ObjectOperationCursor;
+import com.devsmart.moodb.objects.DBElement;
+import com.devsmart.moodb.objects.JsonElementDBWrapper;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.sleepycat.je.*;
@@ -106,15 +108,12 @@ public class MooDB {
         }
     }
 
-    public <T> T getOne(String xpath, Class<T> classType) {
+    public <T> DBPair<T> getOne(String xpath, Class<T> classType) {
         MooDBCursor cursor = query(xpath);
         try {
             if (cursor.moveToNext()) {
-                Utils.
-                if(cursor instanceof ObjectOperationCursor){
-                    return ((ObjectOperationCursor) cursor).getObject().;
-                }
-                return get(cursor.objectId(), classType);
+                JsonElementDBWrapper.DBJsonElement element = (JsonElementDBWrapper.DBJsonElement) cursor.getDBElement();
+                return new DBPair<T>(cursor.objectId(), gson.fromJson(element.mJsonElement, classType));
             } else {
                 return null;
             }

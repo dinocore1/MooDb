@@ -59,6 +59,11 @@ public class PredicateAndCursor implements CountEstimateCursor {
     }
 
     @Override
+    public DBElement getDBElement() {
+        return Utils.toDBElement(mData);
+    }
+
+    @Override
     public void close() {
         if(mCursor != null) {
             mCursor.close();

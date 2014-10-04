@@ -2,6 +2,7 @@ package com.devsmart.moodb.cursor;
 
 import com.devsmart.moodb.MooDB;
 import com.devsmart.moodb.MooDBCursor;
+import com.devsmart.moodb.objects.DBElement;
 
 public class JoinCursor implements MooDBCursor {
 
@@ -90,6 +91,11 @@ public class JoinCursor implements MooDBCursor {
     @Override
     public byte[] getData() {
         return mCurors[0].getData();
+    }
+
+    @Override
+    public DBElement getDBElement() {
+        return mCurors[0].getDBElement();
     }
 
     @Override

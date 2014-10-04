@@ -1,5 +1,7 @@
 package com.devsmart.moodb.cursor;
 
+import com.devsmart.moodb.Utils;
+import com.devsmart.moodb.objects.DBElement;
 import com.sleepycat.je.DatabaseEntry;
 import com.sleepycat.je.LockMode;
 import com.sleepycat.je.OperationStatus;
@@ -95,6 +97,11 @@ public class IndexCursor implements CountEstimateCursor {
     @Override
     public byte[] getData() {
         return data.getData();
+    }
+
+    @Override
+    public DBElement getDBElement() {
+        return Utils.toDBElement(data);
     }
 
     @Override

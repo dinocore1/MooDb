@@ -44,9 +44,7 @@ public class Utils {
     }
 
     public static DBElement toDBElement(DatabaseEntry data) {
-        String jsonStr = toString(data.getData());
-        JsonElement element = new JsonParser().parse(jsonStr);
-        return JsonElementDBWrapper.wrap(element);
+        return toDBElement(data.getData());
     }
 
     public static <T> T toObject(byte[] data, Class<T> objClass) {

@@ -1,6 +1,7 @@
 package com.devsmart.moodb.cursor;
 
 import com.devsmart.moodb.MooDBCursor;
+import com.devsmart.moodb.objects.DBElement;
 
 public class MergeCursor implements MooDBCursor {
 
@@ -46,6 +47,11 @@ public class MergeCursor implements MooDBCursor {
     @Override
     public byte[] getData() {
         return mCursor[i].getData();
+    }
+
+    @Override
+    public DBElement getDBElement() {
+        return mCursor[i].getDBElement();
     }
 
     @Override

@@ -1,12 +1,12 @@
 package com.devsmart.moodb.cursor;
 
-import com.devsmart.moodb.MooDBCursor;
 import com.devsmart.moodb.Utils;
+import com.devsmart.moodb.objects.DBElement;
 import com.sleepycat.je.DatabaseEntry;
 import com.sleepycat.je.LockMode;
 import com.sleepycat.je.OperationStatus;
-import com.sleepycat.je.RangeCursor;
 import com.sleepycat.je.SecondaryCursor;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -97,6 +97,11 @@ public class IndexEqualCursor implements CountEstimateCursor {
     @Override
     public byte[] getData() {
         return data.getData();
+    }
+
+    @Override
+    public DBElement getDBElement() {
+        return Utils.toDBElement(data);
     }
 
     @Override

@@ -142,18 +142,50 @@ public class JsonElementDBWrapper {
         }
     }
 
+    public static class DBJsonElement implements DBElement {
+
+        public final JsonElement mJsonElement;
+
+        public DBJsonElement(JsonElement element) {
+            mJsonElement = element;
+        }
+
+        @Override
+        public boolean isCollection() {
+            return mJsonElement.isJsonArray();
+        }
+
+        @Override
+        public DBCollection getAsCollection() {
+            return new DBJsonArray(mJsonElement.getAsJsonArray());
+        }
+
+        @Override
+        public boolean isObject() {
+            return mJsonElement.isJsonObject();
+        }
+
+        @Override
+        public DBObject getAsObject() {
+            return new DBJsonObject(mJsonElement.getAsJsonObject());
+        }
+
+        @Override
+        public boolean isPrimitive() {
+            return mJsonElement.isJsonPrimitive();
+        }
+
+        @Override
+        public DBPrimitive getAsPrimitive() {
+            return new DBJsonPrimitive(mJsonElement.getAsJsonPrimitive());
+        }
+    }
+
     public static DBElement wrap(JsonElement element) {
         if(element == null) {
             return null;
         }
 
-        if(element.isJsonArray()) {
-            return new DBJsonArray(element.getAsJsonArray());
-        } else if(element.isJsonObject()) {
-            return new DBJsonObject(element.getAsJsonObject());
-        } else if(element.isJsonPrimitive()) {
-            return new DBJsonPrimitive(element.getAsJsonPrimitive());
-        }
-        return null;
+        return new DBJsonElement(element);
     }
 }
