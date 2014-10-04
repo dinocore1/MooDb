@@ -51,6 +51,7 @@ public class MooDB {
         {
             DatabaseConfig dbConfig = new DatabaseConfig();
             dbConfig.setAllowCreate(true);
+            dbConfig.setTransactional(true);
             mObjectsDB = mDBEnv.openDatabase(null, DBNAME_OBJECTS, dbConfig);
         }
 
@@ -62,8 +63,9 @@ public class MooDB {
         }
     }
 
+
     public MooDBTransaction beginTransaction() {
-        return new MooDBTransaction(mDBEnv.beginTransaction(null, null));
+        return MooDBTransaction.beginTransaction(mDBEnv);
     }
 
     public String insert(Object obj) {
@@ -82,7 +84,7 @@ public class MooDB {
         String jsonStr = gson.toJson(obj);
         DatabaseEntry dbvalue = new DatabaseEntry(Utils.toBytes(jsonStr));
 
-        OperationStatus status = mObjectsDB.put(null, dbkey, dbvalue);
+        OperationStatus status = mObjectsDB.put(MooDBTransaction.getCurrentTransaction(), dbkey, dbvalue);
         if(status !=  OperationStatus.SUCCESS) {
             logger.warn("put for key: {} failed. status: {}", key, status);
             return false;
@@ -94,7 +96,7 @@ public class MooDB {
     public byte[] get(String objectId) {
         DatabaseEntry key = new DatabaseEntry(Utils.toBytes(objectId));
         DatabaseEntry value = new DatabaseEntry();
-        mObjectsDB.get(null, key, value, LockMode.DEFAULT);
+        mObjectsDB.get(MooDBTransaction.getCurrentTransaction(), key, value, LockMode.DEFAULT);
         return value.getData();
     }
 
@@ -150,6 +152,7 @@ public class MooDB {
             config.setAllowPopulate(true);
             config.setMultiKeyCreator(index);
             config.setSortedDuplicates(true);
+            config.setTransactional(true);
             index.indexDB = mDBEnv.openSecondaryDatabase(null, indexQuery, mObjectsDB, config);
 
             mIndexes.add(index);
@@ -165,8 +168,8 @@ public class MooDB {
     }
 
     public Index getIndex(String indexQuery) {
-        Index retval =  mIndexes.floor(new Index(indexQuery));
-        if(retval.indexQuery.equals(indexQuery)){
+        Index retval = mIndexes.floor(new Index(indexQuery));
+        if(retval != null && retval.indexQuery.equals(indexQuery)) {
             return retval;
         } else {
             return null;

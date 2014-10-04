@@ -7,6 +7,7 @@ import com.devsmart.moodb.MooDBBaseVisitor;
 import com.devsmart.moodb.MooDBCursor;
 import com.devsmart.moodb.MooDBLexer;
 import com.devsmart.moodb.MooDBParser;
+import com.devsmart.moodb.MooDBTransaction;
 import com.devsmart.moodb.Utils;
 import com.devsmart.moodb.objectquery.ExtractField;
 import com.devsmart.moodb.objectquery.Predicate;
@@ -81,9 +82,9 @@ public class CursorBuilder extends MooDBBaseVisitor<Void> {
             } else {
                 Index index = mDb.getIndex(id.getText());
                 if(index != null){
-                    retval = new IndexEqualCursor(index.getIndexDB().openCursor(null, null), guessDataValue(id.getText()));
+                    retval = new IndexEqualCursor(index.getIndexDB().openCursor(MooDBTransaction.getCurrentTransaction(), null), guessDataValue(id.getText()));
                 } else {
-                    retval = new AllObjectsCursor(mDb.openObjectsCursor(null, null));
+                    retval = new AllObjectsCursor(mDb.openObjectsCursor(MooDBTransaction.getCurrentTransaction(), null));
                 }
             }
         } else {
@@ -122,9 +123,9 @@ public class CursorBuilder extends MooDBBaseVisitor<Void> {
             String indexQuery = Joiner.on("/").join(mSteps);
             Index index = mDb.getIndex(indexQuery);
             if(index != null){
-                retval = new IndexEqualCursor(index.getIndexDB().openCursor(null, null), guessDataValue(id.getText()));
+                retval = new IndexEqualCursor(index.getIndexDB().openCursor(MooDBTransaction.getCurrentTransaction(), null), guessDataValue(id.getText()));
             } else {
-                retval = new AllObjectsCursor(mDb.openObjectsCursor(null, null));
+                retval = new AllObjectsCursor(mDb.openObjectsCursor(MooDBTransaction.getCurrentTransaction(), null));
             }
         }
 
@@ -168,15 +169,15 @@ public class CursorBuilder extends MooDBBaseVisitor<Void> {
         final String op = ctx.o.getText();
         if("=".equals(op)) {
             if(index != null){
-                retval = new IndexEqualCursor(index.getIndexDB().openCursor(null, null), guessDataValue(value));
+                retval = new IndexEqualCursor(index.getIndexDB().openCursor(MooDBTransaction.getCurrentTransaction(), null), guessDataValue(value));
             }
         } else if(">=".equals(op) || ">".equals(op)) {
             if(index != null){
-                retval = new IndexCursor(index.getIndexDB().openCursor(null, null), guessDataValue(value), IndexCursor.Direction.ASC);
+                retval = new IndexCursor(index.getIndexDB().openCursor(MooDBTransaction.getCurrentTransaction(), null), guessDataValue(value), IndexCursor.Direction.ASC);
             }
         } else if("<=".equals(op) || "<".equals(op)){
             if(index != null){
-                retval = new IndexCursor(index.getIndexDB().openCursor(null, null), guessDataValue(value), IndexCursor.Direction.DESC);
+                retval = new IndexCursor(index.getIndexDB().openCursor(MooDBTransaction.getCurrentTransaction(), null), guessDataValue(value), IndexCursor.Direction.DESC);
             }
         }
 
@@ -184,7 +185,7 @@ public class CursorBuilder extends MooDBBaseVisitor<Void> {
             QueryBuilder builder = new QueryBuilder();
             builder.visit(ctx);
             Predicate predicate = (Predicate) builder.prop.get(ctx);
-            retval = new PredicateAndCursor(new AllObjectsCursor(mDb.openObjectsCursor(null, null)), predicate);
+            retval = new PredicateAndCursor(new AllObjectsCursor(mDb.openObjectsCursor(MooDBTransaction.getCurrentTransaction(), null)), predicate);
         }
 
         prop.put(ctx, retval);
