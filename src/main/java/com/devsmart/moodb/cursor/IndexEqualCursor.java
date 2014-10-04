@@ -109,7 +109,10 @@ public class IndexEqualCursor implements CountEstimateCursor {
 
     @Override
     public long getCountEstimate() {
-        long value = mIndexCursor.countEstimate();
+        long value = 0;
+        if(mStatus == OperationStatus.SUCCESS){
+            value = mIndexCursor.countEstimate();
+        }
         return value;
     }
 }

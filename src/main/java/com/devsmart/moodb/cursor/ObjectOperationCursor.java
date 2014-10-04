@@ -66,4 +66,9 @@ public class ObjectOperationCursor implements CountEstimateCursor {
     public long getCountEstimate() {
         return mCursor.getCountEstimate();
     }
+
+    @Override
+    public DBElement getDBElement() {
+        return mObj;
+    }
 }

@@ -1,5 +1,7 @@
 package com.devsmart.moodb;
 
+import com.devsmart.moodb.objects.DBElement;
+
 public interface MooDBCursor {
 
     public static long BEFORE_FIRST = -1;
@@ -10,6 +12,7 @@ public interface MooDBCursor {
     public boolean moveToPrevious();
     public String objectId();
     public byte[] getData();
+    public DBElement getDBElement();
 
     public void close();
 }

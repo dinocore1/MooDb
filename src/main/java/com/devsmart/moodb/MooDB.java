@@ -2,9 +2,13 @@ package com.devsmart.moodb;
 
 
 import com.devsmart.moodb.cursor.CursorBuilder;
+import com.devsmart.moodb.cursor.ObjectOperationCursor;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.sleepycat.je.*;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.File;
 import java.io.IOException;
@@ -12,6 +16,8 @@ import java.util.TreeSet;
 import java.util.UUID;
 
 public class MooDB {
+
+    Logger logger = LoggerFactory.getLogger(MooDB.class);
 
     private static final String DBNAME_OBJECTS = "objects";
     private static final String DBNAME_VIEWS = "views";
@@ -74,7 +80,13 @@ public class MooDB {
         String jsonStr = gson.toJson(obj);
         DatabaseEntry dbvalue = new DatabaseEntry(Utils.toBytes(jsonStr));
 
-        return mObjectsDB.put(null, dbkey, dbvalue) == OperationStatus.SUCCESS;
+        OperationStatus status = mObjectsDB.put(null, dbkey, dbvalue);
+        if(status !=  OperationStatus.SUCCESS) {
+            logger.warn("put for key: {} failed. status: {}", key, status);
+            return false;
+        } else {
+            return true;
+        }
     }
 
     public byte[] get(String objectId) {
@@ -98,6 +110,10 @@ public class MooDB {
         MooDBCursor cursor = query(xpath);
         try {
             if (cursor.moveToNext()) {
+                Utils.
+                if(cursor instanceof ObjectOperationCursor){
+                    return ((ObjectOperationCursor) cursor).getObject().;
+                }
                 return get(cursor.objectId(), classType);
             } else {
                 return null;

@@ -181,7 +181,10 @@ public class CursorBuilder extends MooDBBaseVisitor<Void> {
         }
 
         if(retval == null) {
-            retval = new AllObjectsCursor(mDb.openObjectsCursor(null, null));
+            QueryBuilder builder = new QueryBuilder();
+            builder.visit(ctx);
+            Predicate predicate = (Predicate) builder.prop.get(ctx);
+            retval = new PredicateAndCursor(new AllObjectsCursor(mDb.openObjectsCursor(null, null)), predicate);
         }
 
         prop.put(ctx, retval);
