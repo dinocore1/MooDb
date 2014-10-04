@@ -2,6 +2,8 @@ package com.devsmart.moodb;
 
 import com.devsmart.moodb.objects.DBElement;
 import com.devsmart.moodb.objects.JsonElementDBWrapper;
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonParser;
 import com.sleepycat.je.DatabaseEntry;
@@ -45,5 +47,11 @@ public class Utils {
         String jsonStr = toString(data.getData());
         JsonElement element = new JsonParser().parse(jsonStr);
         return JsonElementDBWrapper.wrap(element);
+    }
+
+    public static <T> T toObject(byte[] data, Class<T> objClass) {
+        String jsonStr = toString(data);
+        Gson gson = new GsonBuilder().create();
+        return gson.fromJson(jsonStr, objClass);
     }
 }

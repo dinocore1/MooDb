@@ -1,13 +1,10 @@
 package com.devsmart.moodb.cursor;
 
-import com.devsmart.moodb.MooDBCursor;
-import com.sleepycat.je.Database;
 import com.sleepycat.je.DatabaseEntry;
 import com.sleepycat.je.LockMode;
 import com.sleepycat.je.OperationStatus;
 import com.sleepycat.je.RangeCursor;
 import com.sleepycat.je.SecondaryCursor;
-import com.sleepycat.je.tree.CountEstimator;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

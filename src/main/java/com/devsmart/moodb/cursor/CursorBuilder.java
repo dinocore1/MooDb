@@ -15,17 +15,13 @@ import com.google.common.base.Joiner;
 import com.sleepycat.bind.tuple.SortedDoubleBinding;
 import com.sleepycat.je.DatabaseEntry;
 
-import com.sleepycat.je.DiskOrderedCursorConfig;
-import com.sleepycat.util.keyrange.RangeCursor;
 import org.antlr.v4.runtime.ANTLRInputStream;
 import org.antlr.v4.runtime.CommonTokenStream;
 import org.antlr.v4.runtime.misc.NotNull;
 import org.antlr.v4.runtime.tree.ParseTreeProperty;
 import org.antlr.v4.runtime.tree.TerminalNode;
 
-import java.util.LinkedList;
 import java.util.Stack;
-import java.util.regex.Pattern;
 
 public class CursorBuilder extends MooDBBaseVisitor<Void> {
 

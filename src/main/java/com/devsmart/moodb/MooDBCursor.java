@@ -12,5 +12,4 @@ public interface MooDBCursor {
     public byte[] getData();
 
     public void close();
-
 }
