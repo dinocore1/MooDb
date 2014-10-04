@@ -1,0 +1,39 @@
+<html>
+<body>
+Data synchronization framework that provides the basis for data transfer
+between JE Databases and external systems.
+
+<p>TODO (remove this list before the release)</p>
+<ul>
+
+<li>Add config option for amount of memory to use for consolidating txns during
+an export.<?li>
+
+<li>Add warning: During import, a foreign key constraint on the JE side that
+does not match a constraint on the Oracle Server side, will cause a problem.  I
+think this is an application design / programming error.</li>
+
+<li>Add import/export config options for number of txn retries and lock
+timeout.</li>
+
+<li>Document how the user should manually handle table rename / remove /
+truncate on the server side.</li>
+
+<li>Document cases where the user must do a full sync (refreshAll), such as JE
+data corruption.</li>
+
+<li>Provide a way to use JDBCSyncProcessor to perform a "custom import" where
+the user provides the SELECT statement for reading the change set on the server
+side.</li>
+
+<li>Currently the SyncProcessor.getChangeSet method can be overridden so that
+the user can provide a custom data set to be exported.  Perhaps a better API
+is to allow passing the ChangeSet to the SyncProcessor constructor.</li>
+
+<li>For mobile sync, ChangeReader.ChangeTxn.markChangesPending may need to be a
+method on ChangeReader itself, not ChangeTxn, so that all changes in the entire
+set can be marked pending at once.  Needs more thought.</li>
+
+</ul>
+</body>
+</html>
