@@ -7,16 +7,6 @@ using namespace rapidjson;
 
 namespace moodb {
 
-class MooDB {
-public:
-
-  static MooDB* open(const char* filename);
-
-  sp<Record> getRecord();
-
-};
-
-
 class SavedRevision {
 public:
   SavedRevision* getPreviousRevision();
@@ -32,22 +22,55 @@ public:
   SavedRevision* getCurrentRevision();
   Document getData();
   SavedRevision* setData(Document doc);
+
+private:
+  class Impl;
+  Impl* mImpl;
 };
+
+class MooDB {
+public:
+  MooDB();
+  virtual ~MooDB();
+
+  void open(const std::string& filename);
+  void close();
+
+  Record createRecord();
+  Record getRecord(const std::string& id);
+  void deleteRecord(const std::string& id);
+
+private:
+  class Impl;
+  Impl* mImpl;
+
+};
+
+
+
 
 class RowIterator {
 public:
   virtual ~RowIterator();
 
   bool hasNext();
-  sp<Record> next();
+  Record* next();
+
+private:
+  class Impl;
+  Impl* mImpl;
 
 };
 
 class Query {
 public:
-  sp<RowIterator> run();
+  RowIterator run();
   void setStartKey(const Value& key);
   void setEndKey(const Value& key);
+
+private:
+  class Impl;
+  Impl* mImpl;
 };
 
 class View {

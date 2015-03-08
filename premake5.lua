@@ -7,4 +7,4 @@ project "MooDBCore"
   location "build/core"
   files { "src/core/*.cpp", "src/core/*.h" }
   includedirs { "include" }
-  links { "db" }
+  links { "db_cxx" }
