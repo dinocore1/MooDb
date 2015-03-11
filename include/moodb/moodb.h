@@ -2,6 +2,7 @@
 #define MOODB_H_
 
 #include <moodb/rapidjson/document.h>
+#include <memory>
 
 using namespace rapidjson;
 
@@ -14,7 +15,9 @@ public:
 };
 
 class Record {
+friend class MooDB;
 public:
+  Record();
   virtual ~Record();
 
   std::string getId();
@@ -45,8 +48,6 @@ private:
   Impl* mImpl;
 
 };
-
-
 
 
 class RowIterator {
