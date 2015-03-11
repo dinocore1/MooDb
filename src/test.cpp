@@ -14,4 +14,13 @@ int main(int argc, char** argv) {
     Record r1 = db.createRecord();
     cout << r1.getId() << endl;
 
+    Document document;
+    document.SetObject();
+    document.AddMember("message", "hello world, dude", document.GetAllocator());
+    r1.setData(document);
+
+    Record r2 = db.getRecord("55");
+    r2.setData(document);
+
+
 }

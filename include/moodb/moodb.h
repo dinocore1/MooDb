@@ -24,7 +24,7 @@ public:
 
   SavedRevision* getCurrentRevision();
   Document getData();
-  SavedRevision* setData(Document doc);
+  SavedRevision* setData(const Document& doc);
 
 private:
   class Impl;
@@ -33,6 +33,8 @@ private:
 
 class MooDB {
 public:
+  class Impl;
+
   MooDB();
   virtual ~MooDB();
 
@@ -44,7 +46,6 @@ public:
   void deleteRecord(const std::string& id);
 
 private:
-  class Impl;
   Impl* mImpl;
 
 };
